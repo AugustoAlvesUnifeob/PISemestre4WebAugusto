@@ -21,12 +21,21 @@ Ele fornecerá uma agenda interativa, onde o usuário pode facilmente ver e cria
 O usuário poderá facilmente adicionar novos usuários, junto de suas informações.
 
 #### Desenvolvimento: 
-Por ser um projeto Web, utilizamos de HTML, CSS e JavaScript para criar a base, interface, e backend do projeto respectivamente.
 
+#### HTML:
+Estrutura Básica e alguns elementos dá página.
+
+#### CSS:
+Estilização da página e seus elementos de interface, responsável por estilizar os elementos construidos em HTML.
+
+#### JS - JavaScript: 
+Responsável pelas funcionalidades núcleo da página, como login, registro e outros elementos.
+
+### React:
+Responsável por carregar bibliotecas que trazem as funcionalidades principais pro sistema e contruir elementos mais complexos no Site.
 
 
 ### Empresa Beneficiada:
-n/a (temporário)
-
+Consultório Dr. Márcio Magalhães Paiva: Otorrinolaringologista - Em São José do Rio Pardo - SP
 
 
