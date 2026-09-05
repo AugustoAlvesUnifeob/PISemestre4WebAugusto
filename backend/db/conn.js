@@ -5,7 +5,8 @@ const Sequelize = require('sequelize')
 const conn = new Sequelize(
     'easyclinic',
     'root',
-    '',{
+    '',
+    {
         host:'localhost',
         dialect:'mysql',
         port:3306

@@ -215,4 +215,7 @@ insert into clinica values ('30976442000139', 'SAUDE E BEM-ESTAR MEDICINA INTEGR
 select * from usuario;
 select * from clinica;
 
-drop database easyclinic;
+
+
+-- apagar o banco de dados:
+-- drop database easyclinic;
