@@ -28,15 +28,12 @@ const Paciente = conn.define('paciente',{
     },
     complemento:{
         type: DataTypes.STRING,
-        required: true
     },
     tag_idtag:{
         type: DataTypes.INTEGER,
-        required: true
     },
     plano_idplano:{
         type: DataTypes.INTEGER,
-        required: true
     },
     clinica_cnpj:{
         type: DataTypes.STRING,

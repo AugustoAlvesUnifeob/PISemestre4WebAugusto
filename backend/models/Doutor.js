@@ -16,7 +16,7 @@ const Doutor = conn.define('doutor',{
     },
     especialidade:{
         type: DataTypes.STRING,
-        required: true
+        //required: true
     },
     clinica_cnpj:{
         type: DataTypes.STRING,

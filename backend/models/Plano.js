@@ -20,7 +20,7 @@ const Plano = conn.define('plano',{
     },
     valordesconto:{
         type: DataTypes.FLOAT,
-        required: true
+        //required: true
     },
     exonera:{
         type: DataTypes.TINYINT,
