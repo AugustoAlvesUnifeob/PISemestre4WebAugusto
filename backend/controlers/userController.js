@@ -1,6 +1,8 @@
 //requerer o model do usuario
 const User = require('../models/Users')
 
+const createUserToken = require('../helpers/create-user-token')
+
 //requerer biblioteca bcrypt
 const bcrypt = require('bcrypt')
 
@@ -26,35 +28,33 @@ module.exports = class UserController{
         }
     }
 
-    static async login(req, res) {
-        const { email, senha } = req.body;
+    static async login(req, res){
+        //requerer pelo body os parametros
+        const {email, senha} = req.body
 
-        try {
-            // Verifica se o usuário existe
-            const user = await User.findOne({ where: { email: email } });
-            if (!user) {
-                return res.status(404).json({ message: 'Usuário não encontrado!' });
-            }
+        //verificar se o usuario existe
+        const user = await User.findOne({where:{email:email}})
 
-            // Compara a senha digitada com o hash salvo
-            const checkPassword = await bcrypt.compare(senha, user.senha);
-            if (!checkPassword) {
-                return res.status(422).json({ message: 'Senha inválida!' });
-            }
-
-            res.status(200).json({
-                message: 'Autenticado com sucesso!',
-                user: {
-                    id: user.idusuario,
-                    usuario: user.usuario,
-                    email: user.email,
-                    clinica_cnpj: user.clinica_cnpj
-                }
-            });
-
-        } catch (error) {
-            res.status(500).json({ message: error.message || 'Erro no servidor' });
+        if(!user){
+            res.status(422).json({
+                message:"Não há usuário cadastrado com esse e-mail"
+            })
+            return
         }
+
+        //verificar password
+        const checkPassword = await bcrypt.compare(senha, user.senha)
+
+        //retornar mensagem para senha incorreta
+        if(!checkPassword){
+            res.status(422).json({
+                message: "Senha Invalida"
+            })
+            return
+        }
+
+        //geramos o token para o usuario
+        await createUserToken(user, req, res)
     }
 
     //metodo para listar todos os usuarios
