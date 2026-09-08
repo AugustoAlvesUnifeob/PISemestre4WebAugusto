@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyClinic - Cadastro</title>
+
+    <link rel="stylesheet" href="../assets/css/cadastro.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="lado-esquerdo">
+
+            <div class="apresentacao">
+                <h1>EasyClinic</h1>
+                <p>Sistema de Gestão para Clínicas</p>
+            </div>
+
+        </div>
+
+        <div class="lado-direito">
+
+            <div class="formulario">
+
+                <h2>Criar Acesso</h2>
+
+                <form method="post">
+                    <h3>Informações da Clínica</h3>
+
+                    <div class="campo">
+                        <label>Nome da Clínica</label>
+                        <input type="text" id="nomeClinica">
+                    </div>
+
+                    <div class="campo">
+                        <label>CNPJ</label>
+                        <input type="text" id="cnpj">
+                        
+                    </div>
+
+                    <h3>Usuário Master</h3>
+
+                    <div class="campo">
+                        <label>Usuário</label>
+                        <input type="text" id="usuario">
+                    </div>
+
+                    <div class="campo">
+                        <label>E-mail</label>
+                        <input type="email" id="email">
+                    </div>
+
+                    <div class="campo">
+                        <label>Senha</label>
+                        <input type="password" id="senha">
+                    </div>
+
+                    <div class="campo">
+                        <label>Confirmar Senha</label>
+                        <input type="password" id="confirmarSenha">
+                    </div>
+
+                    <button type="button" id="btnCadastrar">
+                        Cadastrar
+                    </button>
+
+                </form>
+
+                <div class="login-link">
+
+                    <p>
+                        Já possui conta?
+                        <a href="../../index.html">
+                            Fazer login
+                        </a>
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="../assets/js/cadastro.js"></script>
+
+</body>
+
+</html>

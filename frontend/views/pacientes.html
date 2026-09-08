@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyClinic - Pacientes</title>
+
+    <link rel="stylesheet" href="../assets/css/pacientes.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <aside class="sidebar">
+
+            <h2>EasyClinic</h2>
+
+            <nav>
+
+                <ul>
+                    <li>Início</li>
+                    <li>Agenda</li>
+                    <li class="ativo">Pacientes</li>
+                    <li>Profissionais</li>
+                </ul>
+
+            </nav>
+
+        </aside>
+
+        <main class="conteudo">
+
+            <div class="topo-pacientes">
+
+                <input
+                    type="text"
+                    id="pesquisarPaciente"
+                    class="campo-pesquisa"
+                    placeholder="Pesquisar paciente">
+
+                <button type="button" id="btnNovoPaciente" title="Cadastrar novo paciente">
+                    +
+                </button>
+
+            </div>
+
+            <div class="card-pacientes">
+
+                <ul id="listaPacientes" class="lista-pacientes">
+                    <li class="vazio">Carregando pacientes...</li>
+                </ul>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <script src="../assets/js/pacientes.js"></script>
+
+</body>
+
+</html>
