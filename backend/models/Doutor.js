@@ -21,6 +21,10 @@ const Doutor = conn.define('doutor',{
     clinica_cnpj:{
         type: DataTypes.STRING,
         required: true
+    },
+    documento:{
+        type: DataTypes.INTEGER,
+        required: true
     }
 }, {
     tableName: 'tag',

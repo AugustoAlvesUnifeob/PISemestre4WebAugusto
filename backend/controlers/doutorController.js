@@ -10,7 +10,8 @@ module.exports = class DoutorController{
             await Doutor.create({
                 nome: nome,
                 especialidade: especialidade,
-                clinica_cnpj: clinica_cnpj
+                clinica_cnpj: clinica_cnpj,
+                documento: documento,
             })
             res.status(200).json({message:'Doutor(a) Cadastrado com sucesso'})
         }catch(error){

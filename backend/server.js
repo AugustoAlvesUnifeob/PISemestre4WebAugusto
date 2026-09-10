@@ -17,6 +17,8 @@ const Agenda = require('./models/Agenda.js')
 //requer a rotas ros usuarios (user)
 const userRoutes = require('./routers/userRoutes.js')
 const clinicaRoutes = require('./routers/clinicaRoutes.js')
+const doutorRoutes = require('./routers/doutorRoutes.js')
+const pacienteRoutes = require('./routers/pacienteRoutes.js')
 
 //configurando JSON response
 api.use(express.json())
@@ -27,6 +29,8 @@ api.use(cors())
 
 api.use('/users',userRoutes)
 api.use('/clinicas', clinicaRoutes)
+api.use('/doutores', doutorRoutes)
+api.use('/pacientes', pacienteRoutes)
 
 //start api
 conn.sync()

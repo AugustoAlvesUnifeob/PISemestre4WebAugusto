@@ -85,7 +85,7 @@ CREATE TABLE `pacientes` (
     `idpacientes` INT NOT NULL auto_increment,
     `nome` VARCHAR(45) NOT NULL,
     `cpf` VARCHAR(45) NULL,
-    `telefone` VARCHAR(45) NOT NULL,
+    `telefone` VARCHAR(45),
     `email` VARCHAR(45) NOT NULL,
     `complemento` VARCHAR(45) NULL,
     `tag_idtag` INT NOT NULL,
@@ -148,6 +148,7 @@ CREATE TABLE `doutor` (
     `nome` VARCHAR(45) NOT NULL,
     `especialidade` VARCHAR(45) NOT NULL,
     `clinica_cnpj` VARCHAR(14) NOT NULL,
+    `documento` VARCHAR(20) NOT NULL,
 
     PRIMARY KEY (`iddoutor`),
 
