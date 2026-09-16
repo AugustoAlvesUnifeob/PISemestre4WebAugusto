@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyClinic - Profissionais</title>
+
+    <link rel="stylesheet" href="../assets/css/profissionais.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <aside class="sidebar">
+
+            <h2>EasyClinic</h2>
+
+            <nav>
+                <ul>
+                    <li>Início</li>
+                    <li>Agenda</li>
+                    <li>Pacientes</li>
+                    <li class="ativo">Profissionais</li>
+                </ul>
+            </nav>
+
+        </aside>
+
+        <main class="conteudo">
+
+            <div class="topo-profissionais">
+
+                <input
+                    type="text"
+                    id="pesquisarProfissional"
+                    class="campo-pesquisa"
+                    placeholder="Pesquisar profissional">
+
+                <button
+                    type="button"
+                    id="btnNovoProfissional"
+                    title="Cadastrar profissional">
+                    +
+                </button>
+
+            </div>
+
+            <div class="card-profissionais">
+
+                <ul id="listaProfissionais" class="lista-profissionais">
+                    <li class="vazio">Carregando profissionais...</li>
+                </ul>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <script src="../assets/js/profissionais.js"></script>
+
+</body>
+
+</html>
