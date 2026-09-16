@@ -1,6 +1,7 @@
 const {body,validationResult} = require('express-validator')
 
-// validando o usuário
+// validando o paciente
+
 const registerValidationRules = ()=>{
     return [
         body('nome').notEmpty().withMessage('O nome é obrigatório'),
