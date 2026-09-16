@@ -12,6 +12,10 @@ const {registerValidationRules, validate} = require('../helpers/pacienteValidato
 //register
 route.post('/register',registerValidationRules(), validate, PacienteController.register)
 
+route.post('/update/:idpaciente', PacienteController.update);
+
+route.post('/delete/:idpaciente', PacienteController.delete);
+
 //listar todos
 route.get('/', PacienteController.listAll)
 
