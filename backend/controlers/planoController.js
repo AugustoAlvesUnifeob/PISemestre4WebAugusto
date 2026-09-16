@@ -20,6 +20,49 @@ module.exports = class PlanoController{
         }
     }
 
+    static async update(req, res){
+        const {idplano} = req.params //id do plano na url
+        const {descricao, aplicadesconto, valordesconto, exonera, clinica_cnpj} = req.body
+
+        //atualizar plano
+        try{
+            //procurar plano pelo id
+            const Exists = await Plano.findByPk(idplano)
+            if(!Exists){
+                return res.status(404).json({message: "Plano não encontrado"})
+            }
+
+            await Plano.update(
+                {
+                    descricao: descricao,
+                    aplicadesconto: aplicadesconto,
+                    valordesconto: valordesconto,
+                    exonera: exonera,
+                    clinica_cnpj: clinica_cnpj
+                },
+                {
+                    where: {idplano: idplano}
+                }
+            )
+            res.status(200).json({message:'Plano alterado com sucesso'})
+        }catch(error){
+            res.status(500).json({message: error})
+        }
+    }
+
+    static async delete(req, res){
+        const {idplano} = req.params //id do plano na url
+        try{
+            await Plano.destroy({
+                where: {idplano: idplano}
+            })
+            res.status(200).json({message:'Plano deletado com sucesso'})
+        }
+        catch(error){
+            res.status(500).json({message: error})
+        }
+    }
+
     //metodo para listar todos os planos
     static async listAll(req, res){
         try{

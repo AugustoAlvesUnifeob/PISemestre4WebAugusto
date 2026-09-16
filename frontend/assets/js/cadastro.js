@@ -56,7 +56,7 @@ document.getElementById('btnCadastrar').addEventListener('click', async (event) 
         }
 
         alert('Clínica e Usuário cadastrados com sucesso!');
-        window.location.href = '../views/indexs.html';
+        window.location.href = '../../index.html';
 
     } catch (error) {
         console.error('Detalhes do Erro:', error);

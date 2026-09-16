@@ -19,6 +19,48 @@ module.exports = class DoutorController{
         }
     }
 
+    static async update(req, res){
+        const {iddoutor} = req.params //id do doutor na url
+        const {nome, especialidade, clinica_cnpj, documento} = req.body
+
+        //atualizar doutor
+        try{
+            //procurar doutor pelo id
+            const Exists = await Doutor.findByPk(iddoutor)
+            if(!Exists){
+                return res.status(404).json({message: "Doutor não encontrado"})
+            }
+
+            await Doutor.update(
+                {
+                    nome: nome,
+                    especialidade: especialidade,
+                    clinica_cnpj: clinica_cnpj,
+                    documento: documento
+                },
+                {
+                    where: {iddoutor: iddoutor}
+                }
+            )
+            res.status(200).json({message:'Doutor alterado com sucesso'})
+        }catch(error){
+            res.status(500).json({message: error})
+        }
+    }
+
+    static async delete(req, res){
+        const {iddoutor} = req.params //id do doutor na url
+        try{
+            await Doutor.destroy({
+                where: {iddoutor: iddoutor}
+            })
+            res.status(200).json({message:'Doutor deletado com sucesso'})
+        }
+        catch(error){
+            res.status(500).json({message: error})
+        }
+    }
+
     //metodo para listar todos os doutores
     static async listAll(req, res){
         try{

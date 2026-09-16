@@ -14,6 +14,10 @@ route.post('/register',registerValidationRules(), validate, UserController.regis
 //login
 route.post('/login', UserController.login);
 
+route.post('/update/:idusuario', UserController.update);
+
+route.post('/delete/:idusuario', UserController.delete);
+
 //listar todos
 route.get('/', UserController.listAll)
 

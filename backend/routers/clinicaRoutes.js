@@ -11,6 +11,8 @@ const {registerValidationRules, validate} = require('../helpers/clinicaValidator
 //register
 route.post('/register',registerValidationRules(), validate, ClinicaController.register)
 
+route.post('/update/:idclinica', ClinicaController.update);
+
 //listar todos
 route.get('/', ClinicaController.listAll)
 
