@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@fullcalendar/daygrid": "^6.1.21",
+    "@fullcalendar/react": "^7.1.0",
+    "@fullcalendar/timegrid": "^6.1.21"
+  }
+}
