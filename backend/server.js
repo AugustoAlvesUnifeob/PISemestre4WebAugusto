@@ -21,6 +21,7 @@ const doutorRoutes = require('./routers/doutorRoutes.js')
 const pacienteRoutes = require('./routers/pacienteRoutes.js')
 const planoRoutes = require('./routers/planoRoutes.js')
 const tagRoutes = require('./routers/tagRoutes.js')
+const agendaRoutes = require('./routers/agendaRoutes.js')
 
 //configurando JSON response
 api.use(express.json())
@@ -35,6 +36,7 @@ api.use('/doutores', doutorRoutes)
 api.use('/pacientes', pacienteRoutes)
 api.use('/tag', tagRoutes)
 api.use('/plano', planoRoutes)
+api.use('/agenda', agendaRoutes)
 
 //start api
 conn.sync()
