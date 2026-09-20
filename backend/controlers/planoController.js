@@ -73,4 +73,16 @@ module.exports = class PlanoController{
             res.status(500).json({error: error})
         }
     }
+
+    static async listarByCNPJ(req, res){
+        const clinica_cnpj = req.user.clinica_cnpj
+
+        try{
+            const planos = await Plano.findAll({where: {clinica_cnpj}})
+            res.status(200).json({planos})
+        }
+        catch(error){
+            res.status(500).json({message: error.message})
+        }
+    }
 }

@@ -3,7 +3,12 @@ const Doutor = require('../models/Doutor')
 
 module.exports = class DoutorController{
     static async register(req, res){
-        const {nome, especialidade, clinica_cnpj} = req.body
+        const {nome, especialidade, documento} = req.body
+        const clinica_cnpj = req.user.clinica_cnpj
+
+        if (!clinica_cnpj) {
+            return res.status(401).json({message: 'Clínica não identificada no token'})
+        }
 
         //criar novo doutor
         try{
@@ -15,7 +20,7 @@ module.exports = class DoutorController{
             })
             res.status(200).json({message:'Doutor(a) Cadastrado com sucesso'})
         }catch(error){
-            res.status(500).json({message: error})
+            res.status(500).json({message: error.message})
         }
     }
 
@@ -64,11 +69,25 @@ module.exports = class DoutorController{
     //metodo para listar todos os doutores
     static async listAll(req, res){
         try{
-            const doutores = await Doutor.findAll()
+            const doutores = await Doutor.findAll({
+                where: {clinica_cnpj: req.user.clinica_cnpj}
+            })
             res.status(200).json({doutores: doutores})
         }
         catch(error){
             res.status(500).json({error: error})
+        }
+    }
+
+    static async listarByCNPJ(req, res){
+        const clinica_cnpj = req.user.clinica_cnpj
+
+        try{
+            const doutores = await Doutor.findAll({where: {clinica_cnpj}})
+            res.status(200).json({doutores})
+        }
+        catch(error){
+            res.status(500).json({message: error.message})
         }
     }
 }

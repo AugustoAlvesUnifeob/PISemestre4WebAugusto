@@ -5,7 +5,7 @@ const conn = require('../db/conn.js')
 
 //definir o model user
 const Paciente = conn.define('pacientes',{
-    idpaciente: {
+    idpacientes: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true

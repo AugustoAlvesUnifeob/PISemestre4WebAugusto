@@ -8,8 +8,9 @@ const createUserToken = async(User, req, res)=>{
     const token = jwt.sign({
         usuario: User.usuario,
         idusuario: User.idusuario,
+        tipo: User.tipo,
         clinica_cnpj: User.clinica_cnpj
-    }, process.env.CHAVETOKEN)
+    }, process.env.CHAVETOKEN, { expiresIn: '1h' })
 
     //retornamos o token
     res.status(200).json({token:token})
