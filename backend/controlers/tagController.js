@@ -67,4 +67,16 @@ module.exports = class TagController{
             res.status(500).json({error: error})
         }
     }
+
+    static async listarByCNPJ(req, res){
+        const clinica_cnpj = req.user.clinica_cnpj
+
+        try{
+            const tags = await Tag.findAll({where: {clinica_cnpj}})
+            res.status(200).json({tags})
+        }
+        catch(error){
+            res.status(500).json({message: error.message})
+        }
+    }
 }

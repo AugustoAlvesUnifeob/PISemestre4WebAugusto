@@ -6,6 +6,8 @@ const { validationResult } = require('express-validator')
 const UserController = require('../controlers/userController')
 //requerer as validacoes
 const {registerValidationRules, validate} = require('../helpers/userValidator')
+//requerer a validação do token
+const verifyToken = require('../helpers/verify-token.js')
 
 //rotas
 //register
@@ -14,11 +16,13 @@ route.post('/register',registerValidationRules(), validate, UserController.regis
 //login
 route.post('/login', UserController.login);
 
-route.post('/update/:idusuario', UserController.update);
+route.post('/update/:idusuario', verifyToken, UserController.update);
 
-route.post('/delete/:idusuario', UserController.delete);
+route.post('/delete/:idusuario', verifyToken, UserController.delete);
 
 //listar todos
-route.get('/', UserController.listAll)
+route.get('/', verifyToken, UserController.listAll)
+
+route.get('/listarByCNPJ', verifyToken, UserController.listarByCNPJ)
 
 module.exports = route
