@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
-import type { FormEvent } from 'react'
-import{  Agenda } from './components/AgendaWidget'
-import './index.css'
-import peopleImage from './assets/people.png';
+import { useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
+import{  Agenda } from './components/AgendaWidget';
+import './index.css';
+import { Assets } from './components/AssetsClass';
 
 type Page =
   | 'login'
@@ -207,9 +207,10 @@ function AuthLayout({
     <div className="flex min-h-screen flex-col md:flex-row">
       <div className="flex min-h-[220px] w-full items-center justify-center bg-[#4f7161] md:min-h-screen md:w-[45%]">
         <div className="text-center text-white">
-          <h1 className="mb-3 text-4xl font-bold">EasyClinic</h1>
+          <h1 className="mb-4 text-8xl font-bold">EasyClinic</h1>
           <p className="text-lg">Sistema de Gestão para Clínicas</p>
-          <img src={peopleImage} />
+          <br></br>
+          <img src={Assets.Imagens.people} alt='people'/>
         </div>
       </div>
       <div className="flex min-h-[calc(100vh-220px)] w-full items-center justify-center bg-white px-5 py-8 md:min-h-screen md:w-[55%]">
