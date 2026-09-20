@@ -3,7 +3,12 @@ const Paciente = require('../models/Paciente')
 
 module.exports = class PacienteController{
     static async register(req, res){
-        const {nome, cpf, telefone, email, complemento, tag_idtag, plano_idplano, clinica_cnpj} = req.body
+        const {nome, cpf, telefone, email, complemento, tag_idtag, plano_idplano} = req.body
+        const clinica_cnpj = req.user.clinica_cnpj
+
+        if (!clinica_cnpj) {
+            return res.status(401).json({message: 'Clínica não identificada no token'})
+        }
 
         //criar novo paciente
         try{
@@ -19,7 +24,7 @@ module.exports = class PacienteController{
             })
             res.status(200).json({message:'Paciente Cadastrado com sucesso'})
         }catch(error){
-            res.status(500).json({message: error})
+            res.status(500).json({message: error.message})
         }
     }
 
@@ -72,11 +77,25 @@ module.exports = class PacienteController{
     //metodo para listar todos os pacientes
     static async listAll(req, res){
         try{
-            const pacientes = await Paciente.findAll()
+            const pacientes = await Paciente.findAll({
+                where: {clinica_cnpj: req.user.clinica_cnpj}
+            })
             res.status(200).json({pacientes: pacientes})
         }
         catch(error){
             res.status(500).json({error: error})
+        }
+    }
+
+    static async listarByCNPJ(req, res){
+        const clinica_cnpj = req.user.clinica_cnpj
+
+        try{
+            const pacientes = await Paciente.findAll({where: {clinica_cnpj}})
+            res.status(200).json({pacientes})
+        }
+        catch(error){
+            res.status(500).json({message: error.message})
         }
     }
 }

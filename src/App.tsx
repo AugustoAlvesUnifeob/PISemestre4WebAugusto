@@ -4,6 +4,8 @@ import{  Agenda } from './components/AgendaWidget'
 import './index.css'
 import peopleImage from './assets/people.png';
 
+import { useAuth } from './context/AuthContext'
+
 type Page =
   | 'login'
   | 'cadastro'
@@ -12,40 +14,64 @@ type Page =
   | 'profissionais'
   | 'cadastroPaciente'
   | 'cadastroProfissional'
-type RecordItem = { nome: string; especialidade?: string; idpaciente?: number }
+type RecordItem = {
+  nome: string
+  especialidade?: string
+  idpaciente?: number
+  idpacientes?: number
+  iddoutor?: number
+}
+type SelectOption = { label: string; value: string }
 
 const API_URL = 'http://localhost:5000'
+const protectedPages: Page[] = [
+  'inicio',
+  'pacientes',
+  'profissionais',
+  'cadastroPaciente',
+  'cadastroProfissional',
+]
 
 function App() {
   // useState guarda dados que mudam durante a interação e causam nova renderização.
-  const [page, setPage] = useState<Page>('login')
+  const { token } = useAuth()
+  const [page, setPage] = useState<Page>(() =>
+    localStorage.getItem('@App:token') ? 'inicio' : 'login',
+  )
   const [notice, setNotice] = useState('')
 
   // O componente pai controla a tela atual e passa esta função aos filhos via props.
   const goTo = (nextPage: Page) => {
+    const hasStoredToken = Boolean(localStorage.getItem('@App:token'))
+    if (!token && !hasStoredToken && protectedPages.includes(nextPage)) {
+      setPage('login')
+      return
+    }
     setNotice('')
     setPage(nextPage)
   }
 
+  const visiblePage = token || !protectedPages.includes(page) ? page : 'login'
+
   return (
     <>
-      {page === 'login' && (
+      {visiblePage === 'login' && (
         <Login onNavigate={goTo} onNotice={setNotice} notice={notice} />
       )}
-      {page === 'cadastro' && (
+      {visiblePage === 'cadastro' && (
         <Register onNavigate={goTo} onNotice={setNotice} notice={notice} />
       )}
-      {page === 'inicio' && <Dashboard onNavigate={goTo} />}
-      {page === 'pacientes' && (
+      {visiblePage === 'inicio' && <Dashboard onNavigate={goTo} />}
+      {visiblePage === 'pacientes' && (
         <RecordsPage kind="pacientes" onNavigate={goTo} />
       )}
-      {page === 'profissionais' && (
+      {visiblePage === 'profissionais' && (
         <RecordsPage kind="profissionais" onNavigate={goTo} />
       )}
-      {page === 'cadastroPaciente' && (
+      {visiblePage === 'cadastroPaciente' && (
         <PatientForm onNavigate={goTo} onNotice={setNotice} notice={notice} />
       )}
-      {page === 'cadastroProfissional' && (
+      {visiblePage === 'cadastroProfissional' && (
         <ProfessionalForm
           onNavigate={goTo}
           onNotice={setNotice}
@@ -60,6 +86,7 @@ function Login({ onNavigate, onNotice, notice }: FormProps) {
   // Estes são estados controlados: o valor exibido no input vem do React.
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const { login } = useAuth()
 
   async function submit(event: FormEvent) {
     // Evita o recarregamento padrão do formulário HTML.
@@ -76,7 +103,8 @@ function Login({ onNavigate, onNotice, notice }: FormProps) {
       const data = await readResponse(response)
       if (!response.ok)
         throw new Error(data.message || 'Erro ao realizar login.')
-      localStorage.setItem('usuarioLogado', JSON.stringify(data.user))
+      if (!data.token) throw new Error('A API não retornou um token de acesso.')
+      login(data.token)
       onNotice('Login efetuado com sucesso!')
       onNavigate('inicio')
     } catch (error) {
@@ -324,7 +352,9 @@ function RecordsPage({
 
   // useEffect executa o carregamento quando a página é montada ou quando kind muda.
   useEffect(() => {
-    fetch(`${API_URL}/${isPatients ? 'pacientes' : 'doutores'}`)
+    fetchWithToken(
+      `${API_URL}/${isPatients ? 'pacientes' : 'doutores'}/listarByCNPJ`,
+    )
       .then(async (response) => {
         const data = await readResponse(response)
         if (!response.ok) throw new Error()
@@ -362,7 +392,7 @@ function RecordsPage({
             <li className="rounded-lg bg-[#eef4ef] px-4 py-3.5 text-center text-gray-500">Não foi possível carregar os dados.</li>
           ) : filtered.length ? (
             filtered.map((item) => (
-              <li className="mb-2 rounded-lg bg-[#eef4ef] px-4 py-3.5 font-bold text-gray-800 last:mb-0" key={item.idpaciente || item.nome}>
+              <li className="mb-2 rounded-lg bg-[#eef4ef] px-4 py-3.5 font-bold text-gray-800 last:mb-0" key={item.idpaciente || item.idpacientes || item.iddoutor || item.nome}>
                 {isPatients
                   ? item.nome
                   : `${item.nome} - ${item.especialidade}`}
@@ -438,6 +468,45 @@ type EntityFieldConfig =
     }
 
 function PatientForm({ onNavigate, onNotice, notice }: FormProps) {
+  const [tags, setTags] = useState<SelectOption[]>([])
+  const [planos, setPlanos] = useState<SelectOption[]>([])
+
+  useEffect(() => {
+    Promise.all([
+      fetchWithToken(`${API_URL}/tag/listarByCNPJ`),
+      fetchWithToken(`${API_URL}/plano/listarByCNPJ`),
+    ])
+      .then(async ([tagsResponse, planosResponse]) => {
+        const tagsData = await readResponse(tagsResponse)
+        const planosData = await readResponse(planosResponse)
+        if (!tagsResponse.ok) throw new Error(messageFrom(tagsData))
+        if (!planosResponse.ok) throw new Error(messageFrom(planosData))
+        setTags(
+          (tagsData.tags || []).map(
+            (tag: { idtag: number; descricao: string }) => ({
+              label: tag.descricao,
+              value: String(tag.idtag),
+            }),
+          ),
+        )
+        setPlanos(
+          (planosData.planos || []).map(
+            (plano: { idplano: number; descricao: string }) => ({
+              label: plano.descricao,
+              value: String(plano.idplano),
+            }),
+          ),
+        )
+      })
+      .catch((error) => {
+        onNotice(
+          error instanceof Error
+            ? error.message
+            : 'Não foi possível carregar tags e planos.',
+        )
+      })
+  }, [onNotice])
+
   return (
     <EntityForm
       title="Cadastrar Paciente"
@@ -453,22 +522,20 @@ function PatientForm({ onNavigate, onNotice, notice }: FormProps) {
         { label: 'Complemento', name: 'complemento' },
         {
           label: 'Tag',
-          name: 'tag',
+          name: 'tag_idtag',
           type: 'select',
           options: [
             { label: 'Selecione uma tag', value: '' },
-            { label: 'Tag A', value: 'tag-a' },
-            { label: 'Tag B', value: 'tag-b' },
+            ...tags,
           ],
         },
         {
           label: 'Plano',
-          name: 'plano',
+          name: 'plano_idplano',
           type: 'select',
           options: [
             { label: 'Selecione um plano', value: '' },
-            { label: 'Plano Básico', value: 'basico' },
-            { label: 'Plano Premium', value: 'premium' },
+            ...planos,
           ],
         },
       ]}
@@ -484,7 +551,11 @@ function ProfessionalForm({ onNavigate, onNotice, notice }: FormProps) {
       onNavigate={onNavigate}
       onNotice={onNotice}
       notice={notice}
-      fields={[{ label: 'Nome', name: 'nome' }, { label: 'Especialidade', name: 'especialidade' }]}
+      fields={[
+        { label: 'Nome', name: 'nome' },
+        { label: 'Especialidade', name: 'especialidade' },
+        { label: 'Documento/CRM', name: 'documento' },
+      ]}
     />
   )
 }
@@ -513,18 +584,6 @@ function EntityForm({
     if (fields.some((field) => !values[field.name]))
       return onNotice('Por favor, preencha todos os campos obrigatórios!')
 
-    let user: { clinica_cnpj?: string } | null = null
-    try {
-      user = JSON.parse(localStorage.getItem('usuarioLogado') || 'null')
-    } catch {
-      localStorage.removeItem('usuarioLogado')
-    }
-
-    if (!user?.clinica_cnpj)
-      return onNotice(
-        'Não foi possível identificar a clínica. Faça login novamente.',
-      )
-
     const payload = Object.fromEntries(
       fields.map((field) => [field.name, values[field.name]]),
     )
@@ -534,7 +593,7 @@ function EntityForm({
         title.includes('Paciente')
           ? '/pacientes/register'
           : '/doutores/register',
-        { ...payload, clinica_cnpj: user.clinica_cnpj },
+        payload,
       )
       if (!response.ok) throw new Error(messageFrom(response.data))
       onNotice('Cadastro realizado com sucesso!')
@@ -583,12 +642,25 @@ type FormProps = {
 }
 async function post(path: string, body: object) {
   // Centraliza a configuração comum das requisições POST feitas pelos formulários.
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetchWithToken(`${API_URL}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...tokenHeader(),
+    },
     body: JSON.stringify(body),
   })
   return { ok: response.ok, data: await readResponse(response) }
+}
+function tokenHeader(): Record<string, string> {
+  const token = localStorage.getItem('@App:token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+function fetchWithToken(input: RequestInfo | URL, init: RequestInit = {}) {
+  return fetch(input, {
+    ...init,
+    headers: { ...tokenHeader(), ...init.headers },
+  })
 }
 async function readResponse(response: Response) {
   const text = await response.text()
@@ -600,7 +672,10 @@ async function readResponse(response: Response) {
   }
 }
 function messageFrom(data: { message?: string; errors?: { msg?: string }[] }) {
-  return data.message || data.errors?.[0]?.msg || JSON.stringify(data)
+  if (data.errors?.[0]?.msg) return data.errors[0].msg
+  if (typeof data.message === 'string') return data.message
+  if (data.message) return JSON.stringify(data.message)
+  return JSON.stringify(data)
 }
 
 export default App

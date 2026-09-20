@@ -23,7 +23,7 @@ const Doutor = conn.define('doutor',{
         required: true
     },
     documento:{
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
         required: true
     }
 }, {

@@ -6,16 +6,20 @@ const { validationResult } = require('express-validator')
 const tagController = require('../controlers/tagController')
 //requerer as validacoes
 const {registerValidationRules, validate} = require('../helpers/tagValidator')
+//requerer a validação do token
+const verifyToken = require('../helpers/verify-token.js')
 
 //rotas
 //register
-route.post('/register',registerValidationRules(), validate, tagController.register)
+route.post('/register', verifyToken, registerValidationRules(), validate, tagController.register)
 
-route.post('/update/:idtag', tagController.update);
+route.post('/update/:idtag', verifyToken, tagController.update)
 
-route.post('/delete/:idtag', tagController.delete);
+route.post('/delete/:idtag', verifyToken, tagController.delete)
 
 //listar todos
-route.get('/', tagController.listAll)
+route.get('/', verifyToken, tagController.listAll)
+
+route.get('/listarByCNPJ', verifyToken, tagController.listarByCNPJ)
 
 module.exports = route

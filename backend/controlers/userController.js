@@ -120,4 +120,18 @@ module.exports = class UserController{
             res.status(500).json({error: error})
         }
     }
+
+    static async listarByCNPJ(req, res){
+        const clinica_cnpj = req.user.clinica_cnpj
+        
+        try{
+            const Users = await User.findByFk(clinica_cnpj)
+            if(!Users){
+                Users = "Nenhum usuario cadastrado"
+            }
+        }
+        catch(error){
+            res.status(500).json({error: error})
+        }
+    }
 }
