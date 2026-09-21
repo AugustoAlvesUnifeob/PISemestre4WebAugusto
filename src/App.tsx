@@ -1,10 +1,12 @@
+// --------------------
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import{  Agenda } from './components/AgendaWidget';
 import './index.css';
 import { Assets } from './components/AssetsClass';
-
 import { useAuth } from './context/AuthContext'
+
+// --------------------
 
 type Page =
   | 'login'
@@ -319,9 +321,11 @@ function EntityField({
 }
 
 function Dashboard({ onNavigate }: { onNavigate: (page: Page) => void }) {
+  const { user } = useAuth();
+
   return (
     <Shell active="inicio" onNavigate={onNavigate}>
-      <h1 className="mb-7 text-3xl font-bold text-[#4f7161]">Bem-vindo ao EasyClinic!</h1>
+      <h1 className="mb-7 text-3xl font-bold text-[#4f7161]">Bem-vindo, {user?.usuario}!</h1>
       <div className="rounded-[10px] bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
         <h3 className="mb-4 text-lg font-semibold text-[#4f7161]">Login realizado com sucesso</h3>
         <p className="mb-2">Esta é a tela inicial do sistema.</p>
@@ -434,7 +438,7 @@ function Shell({
             >
               Início
             </li>
-            <li className="cursor-pointer transition hover:opacity-80 md:mb-5" onClick={() => onNavigate('inicio')}>Agenda</li>
+            <li className="cursor-pointer transition hover:opacity-80 md:mb-5" onClick={() => onNavigate('inicio')}>Agendamentos</li>
             <li
               className={`cursor-pointer transition hover:opacity-80 md:mb-5 ${active === 'pacientes' ? 'font-bold opacity-100' : ''}`}
               onClick={() => onNavigate('pacientes')}

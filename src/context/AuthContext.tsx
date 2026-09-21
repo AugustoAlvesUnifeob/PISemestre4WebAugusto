@@ -9,6 +9,7 @@ interface UserPayload {
     exp?: number;
 }
 
+
 interface AuthContextType {
     token: string | null;
     user: UserPayload | null;
