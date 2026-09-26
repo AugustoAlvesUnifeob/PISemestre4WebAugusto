@@ -125,7 +125,7 @@ module.exports = class UserController{
         const clinica_cnpj = req.user.clinica_cnpj
         
         try{
-            const Users = await User.findByFk(clinica_cnpj)
+            const Users = await User.findAll({where: clinica_cnpj})
             if(!Users){
                 Users = "Nenhum usuario cadastrado"
             }
