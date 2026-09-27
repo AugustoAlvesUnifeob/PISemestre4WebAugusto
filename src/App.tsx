@@ -15,14 +15,22 @@ type Page =
   | 'inicio'
   | 'pacientes'
   | 'profissionais'
+  | 'tags'
   | 'cadastroPaciente'
   | 'cadastroProfissional'
+  | 'cadastroTag'
+
 type RecordItem = {
   nome: string
   especialidade?: string
   idpaciente?: number
   idpacientes?: number
   iddoutor?: number
+}
+
+type TagItem = {
+  idtag: number
+  descricao: string
 }
 
 type SelectOption = { label: string; value: string }
@@ -32,8 +40,10 @@ const protectedPages: Page[] = [
   'inicio',
   'pacientes',
   'profissionais',
+  'tags',
   'cadastroPaciente',
   'cadastroProfissional',
+  'cadastroTag',
 ]
 
 function App() {
@@ -82,6 +92,11 @@ function App() {
           notice={notice}
         />
       )}
+
+      {visiblePage === 'tags' && <TagsPage onNavigate={goTo} />}
+      {visiblePage === 'cadastroTag' && (
+        <TagForm onNavigate={goTo} onNotice={setNotice} notice={notice} />
+      )}      
     </>
   )
 }
@@ -416,6 +431,69 @@ function RecordsPage({
   )
 }
 
+function TagsPage({ onNavigate }: { onNavigate: (page: Page) => void }) {
+  const [tags, setTags] = useState<TagItem[]>([])
+  const [query, setQuery] = useState('')
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    fetchWithToken(`${API_URL}/tag/listarByCNPJ`)
+      .then(async (response) => {
+        const data = await readResponse(response)
+        if (!response.ok) throw new Error()
+        setTags(data.tags || [])
+      })
+      .catch(() => setError(true))
+  }, [])
+
+  const filtered = tags.filter((tag) =>
+    tag.descricao?.toLowerCase().includes(query.trim().toLowerCase()),
+  )
+
+  return (
+    <Sidebar active="tags" onNavigate={onNavigate}>
+      <div className="mb-6 flex items-center gap-4">
+        <input
+          className="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#4f7161] focus:outline-none focus:ring-2 focus:ring-[#4f7161]/20"
+          placeholder="Pesquisar tag"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+        <button
+          className="h-11 w-11 shrink-0 rounded-lg bg-[#4f7161] text-2xl leading-none text-white transition hover:bg-[#3f5c4f]"
+          type="button"
+          onClick={() => onNavigate('cadastroTag')}
+        >
+          +
+        </button>
+      </div>
+      <div className="rounded-[10px] bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
+        <ul className="max-h-[65vh] list-none overflow-y-auto">
+          {error ? (
+            <li className="rounded-lg bg-[#eef4ef] px-4 py-3.5 text-center text-gray-500">
+              Não foi possível carregar as tags.
+            </li>
+          ) : filtered.length ? (
+            filtered.map((tag) => (
+              <li
+                className="mb-2 rounded-lg bg-[#eef4ef] px-4 py-3.5 text-center font-bold text-gray-800 last:mb-0"
+                key={tag.idtag}
+              >
+                {tag.descricao.toUpperCase()}
+              </li>
+            ))
+          ) : (
+            <li className="rounded-lg bg-[#eef4ef] px-4 py-3.5 text-center text-gray-500">
+              {tags.length
+                ? 'Nenhum resultado encontrado.'
+                : 'Nenhuma tag cadastrada ainda.'}
+            </li>
+          )}
+        </ul>
+      </div>
+    </Sidebar>
+  )
+}
 
 type EntityFieldConfig =
   | {
@@ -474,6 +552,7 @@ function PatientForm({ onNavigate, onNotice, notice }: FormProps) {
     <EntityForm
       title="Cadastrar Paciente"
       back="pacientes"
+      endpoint="/pacientes/register" 
       onNavigate={onNavigate}
       onNotice={onNotice}
       notice={notice}
@@ -511,6 +590,7 @@ function ProfessionalForm({ onNavigate, onNotice, notice }: FormProps) {
     <EntityForm
       title="Cadastrar Profissional"
       back="profissionais"
+      endpoint="/doutores/register"
       onNavigate={onNavigate}
       onNotice={onNotice}
       notice={notice}
@@ -523,10 +603,25 @@ function ProfessionalForm({ onNavigate, onNotice, notice }: FormProps) {
   )
 }
 
+function TagForm({ onNavigate, onNotice, notice }: FormProps) {
+  return (
+    <EntityForm
+      title="Cadastrar Tag"
+      back="tags"
+      endpoint="/tags/register"
+      onNavigate={onNavigate}
+      onNotice={onNotice}
+      notice={notice}
+      fields={[{ label: 'Nome da Tag', name: 'descricao' }]}
+    />
+  )
+}
+
 function EntityForm({
   title,
   back,
   fields,
+  endpoint,
   onNavigate,
   onNotice,
   notice,
@@ -534,6 +629,7 @@ function EntityForm({
   title: string
   back: Page
   fields: EntityFieldConfig[]
+  endpoint: string
   onNavigate: (page: Page) => void
   onNotice: (notice: string) => void
   notice: string
@@ -552,12 +648,8 @@ function EntityForm({
     )
 
     try {
-      const response = await post(
-        title.includes('Paciente')
-          ? '/pacientes/register'
-          : '/doutores/register',
-        payload,
-      )
+      const response = await post(endpoint, payload)
+
       if (!response.ok) throw new Error(messageFrom(response.data))
       onNotice('Cadastro realizado com sucesso!')
       onNavigate(back)
