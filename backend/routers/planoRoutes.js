@@ -20,6 +20,8 @@ route.post('/delete/:idplano', verifyToken, planoController.delete);
 //listar todos
 route.get('/', verifyToken, planoController.listAll)
 
+route.get('/:idplano', verifyToken, planoController.listarOne)
+
 route.get('/listarByCNPJ', verifyToken, planoController.listarByCNPJ)
 
 module.exports = route

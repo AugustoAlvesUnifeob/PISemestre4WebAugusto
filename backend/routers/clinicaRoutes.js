@@ -16,4 +16,6 @@ route.post('/update/:idclinica', ClinicaController.update);
 //listar todos
 route.get('/', ClinicaController.listAll)
 
+route.get('/:idclinica', ClinicaController.listarOne)
+
 module.exports = route

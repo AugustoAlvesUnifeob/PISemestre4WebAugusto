@@ -98,4 +98,18 @@ module.exports = class PacienteController{
             res.status(500).json({message: error.message})
         }
     }
+
+    static async listarOne(req, res){
+        const idpaciente = req.params
+
+        try{
+            const Pacientes = await Paciente.findOne({where: idpaciente})
+            if(!Pacientes){
+                Pacientes = "Paciente não cadastrado"
+            }
+        }
+        catch(error){
+            res.status(500).json({error: error})
+        }
+    }
 }

@@ -90,4 +90,18 @@ module.exports = class DoutorController{
             res.status(500).json({message: error.message})
         }
     }
+
+    static async listarOne(req, res){
+        const iddoutor = req.params
+
+        try{
+            const Doutores = await Doutor.findOne({where: iddoutor})
+            if(!Doutores){
+                Doutores = "Doutor não cadastrado"
+            }
+        }
+        catch(error){
+            res.status(500).json({error: error})
+        }
+    }
 }

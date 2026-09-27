@@ -20,6 +20,8 @@ route.post('/delete/:idtag', verifyToken, tagController.delete)
 //listar todos
 route.get('/', verifyToken, tagController.listAll)
 
+route.get('/:idtag', verifyToken, tagController.listarOne)
+
 route.get('/listarByCNPJ', verifyToken, tagController.listarByCNPJ)
 
 module.exports = route

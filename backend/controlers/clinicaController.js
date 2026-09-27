@@ -53,4 +53,18 @@ module.exports = class ClinicaController{
             res.status(500).json({error: error})
         }
     }
+
+    static async listarOne(req, res){
+        const cnpj = req.params
+
+        try{
+            const Clinicas = await Clinica.findOne({where: cnpj})
+            if(!Clinicas){
+                Clinicas = "Clinica não cadastrada"
+            }
+        }
+        catch(error){
+            res.status(500).json({error: error})
+        }
+    }
 }
