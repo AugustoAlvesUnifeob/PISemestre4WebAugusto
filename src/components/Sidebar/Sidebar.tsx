@@ -7,9 +7,11 @@ type Page =
   | 'pacientes'
   | 'profissionais'
   | 'tags'
+  | 'planos'
   | 'cadastroPaciente'
   | 'cadastroProfissional'
   | 'cadastroTag'
+  | 'cadastroPlano'
 ;
 
 export function Sidebar({

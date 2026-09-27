@@ -16,9 +16,11 @@ type Page =
   | 'pacientes'
   | 'profissionais'
   | 'tags'
+  | 'planos'
   | 'cadastroPaciente'
   | 'cadastroProfissional'
   | 'cadastroTag'
+  | 'cadastroPlano'
 
 type RecordItem = {
   nome: string
@@ -33,6 +35,11 @@ type TagItem = {
   descricao: string
 }
 
+type PlanoItem = {
+  idplano: number
+  descricao: string
+}
+
 type SelectOption = { label: string; value: string }
 
 const API_URL = 'http://localhost:5000'
@@ -41,9 +48,11 @@ const protectedPages: Page[] = [
   'pacientes',
   'profissionais',
   'tags',
+  'planos',
   'cadastroPaciente',
   'cadastroProfissional',
   'cadastroTag',
+  'cadastroPlano'
 ]
 
 function App() {
@@ -96,7 +105,12 @@ function App() {
       {visiblePage === 'tags' && <TagsPage onNavigate={goTo} />}
       {visiblePage === 'cadastroTag' && (
         <TagForm onNavigate={goTo} onNotice={setNotice} notice={notice} />
-      )}      
+      )}   
+      
+      {visiblePage === 'planos' && <PlanosPage onNavigate={goTo} />}
+      {visiblePage === 'cadastroPlano' && (
+        <PlanoForm onNavigate={goTo} onNotice={setNotice} notice={notice} />
+      )}   
     </>
   )
 }
@@ -324,6 +338,32 @@ function EntityField({
     )
   }
 
+   if (field.type === 'radio') {
+    return (
+      <div className="space-y-1">
+        <label className="block text-sm text-gray-600">{field.label}</label>
+        <div className="flex gap-6 pt-1">
+          {field.options.map((option) => (
+            <label
+              key={option.value}
+              className="flex items-center gap-2 cursor-pointer text-sm text-gray-700"
+            >
+              <input
+                type="radio"
+                name={field.name}
+                value={option.value}
+                checked={value === option.value}
+                onChange={(event) => onChange(event.target.value)}
+                className="h-4 w-4 accent-[#4f7161]"
+              />
+              {option.label}
+            </label>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-1">
       <label className="block text-sm text-gray-600">{field.label}</label>
@@ -495,6 +535,107 @@ function TagsPage({ onNavigate }: { onNavigate: (page: Page) => void }) {
   )
 }
 
+function PlanosPage({ onNavigate }: { onNavigate: (page: Page) => void }) {
+  const [planos, setPlanos] = useState<PlanoItem[]>([])
+  const [query, setQuery] = useState('')
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    fetchWithToken(`${API_URL}/plano/listarByCNPJ`)
+      .then(async (response) => {
+        const data = await readResponse(response)
+        if (!response.ok) throw new Error()
+        setPlanos(data.planos || [])
+      })
+      .catch(() => setError(true))
+  }, [])
+
+  const filtered = planos.filter((plano) =>
+    plano.descricao?.toLowerCase().includes(query.trim().toLowerCase()),
+  )
+
+  return (
+    <Sidebar active="planos" onNavigate={onNavigate}>
+      <div className="mb-6 flex items-center gap-4">
+        <input
+          className="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#4f7161] focus:outline-none focus:ring-2 focus:ring-[#4f7161]/20"
+          placeholder="Pesquisar plano"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+        <button
+          className="h-11 w-11 shrink-0 rounded-lg bg-[#4f7161] text-2xl leading-none text-white transition hover:bg-[#3f5c4f]"
+          type="button"
+          onClick={() => onNavigate('cadastroPlano')}
+        >
+          +
+        </button>
+      </div>
+      <div className="rounded-[10px] bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
+        <ul className="max-h-[65vh] list-none overflow-y-auto">
+          {error ? (
+            <li className="rounded-lg bg-[#eef4ef] px-4 py-3.5 text-center text-gray-500">
+              Não foi possível carregar os planos.
+            </li>
+          ) : filtered.length ? (
+            filtered.map((plano) => (
+              <li
+                className="mb-2 rounded-lg bg-[#eef4ef] px-4 py-3.5 text-center font-bold text-gray-800 last:mb-0"
+                key={plano.idplano}
+              >
+                {plano.descricao.toUpperCase()}
+              </li>
+            ))
+          ) : (
+            <li className="rounded-lg bg-[#eef4ef] px-4 py-3.5 text-center text-gray-500">
+              {planos.length
+                ? 'Nenhum resultado encontrado.'
+                : 'Nenhum plano cadastrado ainda.'}
+            </li>
+          )}
+        </ul>
+      </div>
+    </Sidebar>
+  )
+}
+
+// Formulario
+function PlanoForm({ onNavigate, onNotice, notice }: FormProps) {
+  return (
+    <EntityForm
+      title="Cadastrar Plano"
+      back="planos"
+      endpoint="/plano/register"
+      onNavigate={onNavigate}
+      onNotice={onNotice}
+      notice={notice}
+      fields={[
+        { label: 'Nome', name: 'descricao' },
+        // os radios são obrigatórios, se não marcar Sim/Não o form não envia
+        {
+          label: 'Desconta',
+          name: 'desconta',
+          type: 'radio',
+          options: [
+            { label: 'Sim', value: 'true' },
+            { label: 'Não', value: 'false' },
+          ],
+        },
+        { label: 'Valor Desconto', name: 'valor_desconto' },
+        {
+          label: 'Exonera',
+          name: 'exonera',
+          type: 'radio',
+          options: [
+            { label: 'Sim', value: 'true' },
+            { label: 'Não', value: 'false' },
+          ],
+        },
+      ]}
+    />
+  )
+}
+
 type EntityFieldConfig =
   | {
       label: string
@@ -505,6 +646,12 @@ type EntityFieldConfig =
       label: string
       name: string
       type: 'select'
+      options: Array<{ label: string; value: string }>
+    }
+  | {
+      label: string
+      name: string
+      type: 'radio'
       options: Array<{ label: string; value: string }>
     }
 
