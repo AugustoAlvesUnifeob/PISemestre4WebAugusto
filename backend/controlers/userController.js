@@ -134,4 +134,18 @@ module.exports = class UserController{
             res.status(500).json({error: error})
         }
     }
+
+    static async listarOne(req, res){
+        const idusuario = req.params
+
+        try{
+            const Users = await User.findOne({where: idusuario})
+            if(!Users){
+                Users = "Usuário não cadastrado"
+            }
+        }
+        catch(error){
+            res.status(500).json({error: error})
+        }
+    }
 }

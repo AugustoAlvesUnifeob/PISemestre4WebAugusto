@@ -14,6 +14,7 @@ const Plano = require('./models/Plano.js')
 const Paciente = require('./models/Paciente.js')
 const Doutor = require('./models/Doutor.js')
 const Agenda = require('./models/Agenda.js')
+const Anaminese = require('./models/Anaminese.js')
 //requer a rotas ros usuarios (user)
 const userRoutes = require('./routers/userRoutes.js')
 const clinicaRoutes = require('./routers/clinicaRoutes.js')
@@ -22,6 +23,7 @@ const pacienteRoutes = require('./routers/pacienteRoutes.js')
 const planoRoutes = require('./routers/planoRoutes.js')
 const tagRoutes = require('./routers/tagRoutes.js')
 const agendaRoutes = require('./routers/agendaRoutes.js')
+const anamineseRoutes = require('./routers/anamineseRoutes.js')
 
 //configurando JSON response
 api.use(express.json())
@@ -37,6 +39,7 @@ api.use('/pacientes', pacienteRoutes)
 api.use('/tag', tagRoutes)
 api.use('/plano', planoRoutes)
 api.use('/agenda', agendaRoutes)
+api.use('/anaminese', anamineseRoutes)
 
 //start api
 conn.sync()

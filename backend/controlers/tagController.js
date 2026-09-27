@@ -79,4 +79,18 @@ module.exports = class TagController{
             res.status(500).json({message: error.message})
         }
     }
+
+    static async listarOne(req, res){
+        const idtag = req.params
+
+        try{
+            const Tags = await Tag.findOne({where: idtag})
+            if(!Tags){
+                Tags = "Tag não cadastrada"
+            }
+        }
+        catch(error){
+            res.status(500).json({error: error})
+        }
+    }
 }
