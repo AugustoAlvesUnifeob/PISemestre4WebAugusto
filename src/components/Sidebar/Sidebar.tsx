@@ -12,6 +12,10 @@ type Page =
   | 'cadastroProfissional'
   | 'cadastroTag'
   | 'cadastroPlano'
+  | 'editarPaciente'
+  | 'editarProfissional'
+  | 'editarTag'
+  | 'editarPlano'
 ;
 
 export function Sidebar({
@@ -71,7 +75,12 @@ export function Sidebar({
                         Tags
                         </li>
 
-                        <li className="cursor-pointer rounded-full px-3 py-2 text-[#2d2d2d] transition hover:bg-[#edf4f0] md:mb-4" onClick={() => onNavigate('inicio')}>Planos</li>
+                        <li
+                        className={`cursor-pointer rounded-full px-3 py-2 transition hover:bg-[#edf4f0] md:mb-4 ${active === 'planos' ? 'bg-[#edf4f0] font-bold text-[#27463b]' : 'text-[#2d2d2d]'}`}
+                        onClick={() => onNavigate('planos')}
+                        >
+                        Planos
+                        </li>
 
                         <li className="cursor-pointer rounded-full px-3 py-2 text-[#2d2d2d] transition hover:bg-[#edf4f0] md:mb-4" onClick={() => onNavigate('inicio')}>Documentos</li>
 

@@ -21,10 +21,21 @@ type Page =
   | 'cadastroProfissional'
   | 'cadastroTag'
   | 'cadastroPlano'
+  | 'editarPaciente'
+  | 'editarProfissional'
+  | 'editarTag'
+  | 'editarPlano'
 
 type RecordItem = {
   nome: string
   especialidade?: string
+  documento?: string
+  cpf?: string
+  telefone?: string
+  email?: string
+  complemento?: string
+  tag_idtag?: number
+  plano_idplano?: number
   idpaciente?: number
   idpacientes?: number
   iddoutor?: number
@@ -38,7 +49,12 @@ type TagItem = {
 type PlanoItem = {
   idplano: number
   descricao: string
+  aplicadesconto?: boolean
+  valordesconto?: number
+  exonera?: boolean
 }
+
+type EditingItem = RecordItem | TagItem | PlanoItem
 
 type SelectOption = { label: string; value: string }
 
@@ -52,7 +68,11 @@ const protectedPages: Page[] = [
   'cadastroPaciente',
   'cadastroProfissional',
   'cadastroTag',
-  'cadastroPlano'
+  'cadastroPlano',
+  'editarPaciente',
+  'editarProfissional',
+  'editarTag',
+  'editarPlano'
 ]
 
 function App() {
@@ -62,6 +82,7 @@ function App() {
     localStorage.getItem('@App:token') ? 'inicio' : 'login',
   )
   const [notice, setNotice] = useState('')
+  const [editingItem, setEditingItem] = useState<EditingItem | null>(null)
 
   // O componente pai controla a tela atual e passa esta função aos filhos via props.
   const goTo = (nextPage: Page) => {
@@ -75,6 +96,10 @@ function App() {
   }
 
   const visiblePage = token || !protectedPages.includes(page) ? page : 'login'
+  const beginEdit = (nextPage: Extract<Page, `editar${string}`>, item: EditingItem) => {
+    setEditingItem(item)
+    goTo(nextPage)
+  }
 
   return (
     <>
@@ -86,13 +111,16 @@ function App() {
       )}
       {visiblePage === 'inicio' && <Dashboard onNavigate={goTo} />}
       {visiblePage === 'pacientes' && (
-        <RecordsPage kind="pacientes" onNavigate={goTo} />
+        <RecordsPage kind="pacientes" onNavigate={goTo} onEdit={(item) => beginEdit('editarPaciente', item)} />
       )}
       {visiblePage === 'profissionais' && (
-        <RecordsPage kind="profissionais" onNavigate={goTo} />
+        <RecordsPage kind="profissionais" onNavigate={goTo} onEdit={(item) => beginEdit('editarProfissional', item)} />
       )}
       {visiblePage === 'cadastroPaciente' && (
         <PatientForm onNavigate={goTo} onNotice={setNotice} notice={notice} />
+      )}
+      {visiblePage === 'editarPaciente' && editingItem && (
+        <PatientForm onNavigate={goTo} onNotice={setNotice} notice={notice} item={editingItem as RecordItem} />
       )}
       {visiblePage === 'cadastroProfissional' && (
         <ProfessionalForm
@@ -101,16 +129,25 @@ function App() {
           notice={notice}
         />
       )}
+      {visiblePage === 'editarProfissional' && editingItem && (
+        <ProfessionalForm onNavigate={goTo} onNotice={setNotice} notice={notice} item={editingItem as RecordItem} />
+      )}
 
-      {visiblePage === 'tags' && <TagsPage onNavigate={goTo} />}
+      {visiblePage === 'tags' && <TagsPage onNavigate={goTo} onEdit={(item) => beginEdit('editarTag', item)} />}
       {visiblePage === 'cadastroTag' && (
         <TagForm onNavigate={goTo} onNotice={setNotice} notice={notice} />
       )}   
+      {visiblePage === 'editarTag' && editingItem && (
+        <TagForm onNavigate={goTo} onNotice={setNotice} notice={notice} item={editingItem as TagItem} />
+      )}
       
-      {visiblePage === 'planos' && <PlanosPage onNavigate={goTo} />}
+      {visiblePage === 'planos' && <PlanosPage onNavigate={goTo} onEdit={(item) => beginEdit('editarPlano', item)} />}
       {visiblePage === 'cadastroPlano' && (
         <PlanoForm onNavigate={goTo} onNotice={setNotice} notice={notice} />
       )}   
+      {visiblePage === 'editarPlano' && editingItem && (
+        <PlanoForm onNavigate={goTo} onNotice={setNotice} notice={notice} item={editingItem as PlanoItem} />
+      )}
     </>
   )
 }
@@ -401,9 +438,11 @@ function Dashboard({ onNavigate }: { onNavigate: (page: Page) => void }) {
 function RecordsPage({
   kind,
   onNavigate,
+  onEdit,
 }: {
   kind: 'pacientes' | 'profissionais'
   onNavigate: (page: Page) => void
+  onEdit: (item: RecordItem) => void
 }) {
   const [items, setItems] = useState<RecordItem[]>([])
   const [query, setQuery] = useState('')
@@ -425,6 +464,17 @@ function RecordsPage({
   const filtered = items.filter((item) =>
     item.nome?.toLowerCase().includes(query.trim().toLowerCase()),
   )
+  const deleteItem = async (item: RecordItem) => {
+    const id = isPatients ? item.idpaciente ?? item.idpacientes : item.iddoutor
+    if (!id || !window.confirm(`Deseja excluir ${item.nome}?`)) return
+    try {
+      const response = await post(`/${isPatients ? 'pacientes' : 'doutores'}/delete/${id}`, {})
+      if (!response.ok) throw new Error(messageFrom(response.data))
+      setItems((current) => current.filter((currentItem) => currentItem !== item))
+    } catch (deleteError) {
+      window.alert(deleteError instanceof Error ? deleteError.message : 'NÃ£o foi possÃ­vel excluir o registro.')
+    }
+  }
 
   // JSX permite renderização condicional usando expressões JavaScript.
   return (
@@ -452,10 +502,11 @@ function RecordsPage({
             <li className="rounded-lg bg-[#eef4ef] px-4 py-3.5 text-center text-gray-500">Não foi possível carregar os dados.</li>
           ) : filtered.length ? (
             filtered.map((item) => (
-              <li className="mb-2 rounded-lg bg-[#eef4ef] px-4 py-3.5 font-bold text-gray-800 last:mb-0" key={item.idpaciente || item.idpacientes || item.iddoutor || item.nome}>
-                {isPatients
-                  ? item.nome
-                  : `${item.nome} - ${item.especialidade}`}
+              <li className="mb-2 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-[#eef4ef] px-4 py-3.5 text-gray-800 last:mb-0" key={item.idpaciente || item.idpacientes || item.iddoutor || item.nome}>
+                <span className="font-bold">
+                  CÃ³digo: {isPatients ? item.idpaciente ?? item.idpacientes : item.iddoutor} — {isPatients ? item.nome : `${item.nome} - ${item.especialidade}`}
+                </span>
+                <ListActions onEdit={() => onEdit(item)} onDelete={() => deleteItem(item)} />
               </li>
             ))
           ) : (
@@ -471,7 +522,7 @@ function RecordsPage({
   )
 }
 
-function TagsPage({ onNavigate }: { onNavigate: (page: Page) => void }) {
+function TagsPage({ onNavigate, onEdit }: { onNavigate: (page: Page) => void; onEdit: (item: TagItem) => void }) {
   const [tags, setTags] = useState<TagItem[]>([])
   const [query, setQuery] = useState('')
   const [error, setError] = useState(false)
@@ -489,6 +540,16 @@ function TagsPage({ onNavigate }: { onNavigate: (page: Page) => void }) {
   const filtered = tags.filter((tag) =>
     tag.descricao?.toLowerCase().includes(query.trim().toLowerCase()),
   )
+  const deleteTag = async (tag: TagItem) => {
+    if (!window.confirm(`Deseja excluir a tag ${tag.descricao}?`)) return
+    try {
+      const response = await post(`/tag/delete/${tag.idtag}`, {})
+      if (!response.ok) throw new Error(messageFrom(response.data))
+      setTags((current) => current.filter(({ idtag }) => idtag !== tag.idtag))
+    } catch (deleteError) {
+      window.alert(deleteError instanceof Error ? deleteError.message : 'NÃ£o foi possÃ­vel excluir a tag.')
+    }
+  }
 
   return (
     <Sidebar active="tags" onNavigate={onNavigate}>
@@ -516,10 +577,11 @@ function TagsPage({ onNavigate }: { onNavigate: (page: Page) => void }) {
           ) : filtered.length ? (
             filtered.map((tag) => (
               <li
-                className="mb-2 rounded-lg bg-[#eef4ef] px-4 py-3.5 text-center font-bold text-gray-800 last:mb-0"
+                className="mb-2 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-[#eef4ef] px-4 py-3.5 text-gray-800 last:mb-0"
                 key={tag.idtag}
               >
-                {tag.descricao.toUpperCase()}
+                <span className="font-bold">CÃ³digo: {tag.idtag} — {tag.descricao.toUpperCase()}</span>
+                <ListActions onEdit={() => onEdit(tag)} onDelete={() => deleteTag(tag)} />
               </li>
             ))
           ) : (
@@ -535,7 +597,7 @@ function TagsPage({ onNavigate }: { onNavigate: (page: Page) => void }) {
   )
 }
 
-function PlanosPage({ onNavigate }: { onNavigate: (page: Page) => void }) {
+function PlanosPage({ onNavigate, onEdit }: { onNavigate: (page: Page) => void; onEdit: (item: PlanoItem) => void }) {
   const [planos, setPlanos] = useState<PlanoItem[]>([])
   const [query, setQuery] = useState('')
   const [error, setError] = useState(false)
@@ -553,6 +615,16 @@ function PlanosPage({ onNavigate }: { onNavigate: (page: Page) => void }) {
   const filtered = planos.filter((plano) =>
     plano.descricao?.toLowerCase().includes(query.trim().toLowerCase()),
   )
+  const deletePlano = async (plano: PlanoItem) => {
+    if (!window.confirm(`Deseja excluir o plano ${plano.descricao}?`)) return
+    try {
+      const response = await post(`/plano/delete/${plano.idplano}`, {})
+      if (!response.ok) throw new Error(messageFrom(response.data))
+      setPlanos((current) => current.filter(({ idplano }) => idplano !== plano.idplano))
+    } catch (deleteError) {
+      window.alert(deleteError instanceof Error ? deleteError.message : 'NÃ£o foi possÃ­vel excluir o plano.')
+    }
+  }
 
   return (
     <Sidebar active="planos" onNavigate={onNavigate}>
@@ -580,10 +652,11 @@ function PlanosPage({ onNavigate }: { onNavigate: (page: Page) => void }) {
           ) : filtered.length ? (
             filtered.map((plano) => (
               <li
-                className="mb-2 rounded-lg bg-[#eef4ef] px-4 py-3.5 text-center font-bold text-gray-800 last:mb-0"
+                className="mb-2 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-[#eef4ef] px-4 py-3.5 text-gray-800 last:mb-0"
                 key={plano.idplano}
               >
-                {plano.descricao.toUpperCase()}
+                <span className="font-bold">CÃ³digo: {plano.idplano} — {plano.descricao.toUpperCase()}</span>
+                <ListActions onEdit={() => onEdit(plano)} onDelete={() => deletePlano(plano)} />
               </li>
             ))
           ) : (
@@ -599,29 +672,40 @@ function PlanosPage({ onNavigate }: { onNavigate: (page: Page) => void }) {
   )
 }
 
+function ListActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+  return (
+    <span className="flex shrink-0 gap-2">
+      <button className="rounded-md bg-[#4f7161] px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-[#3f5c4f]" type="button" onClick={onEdit}>Editar</button>
+      <button className="rounded-md bg-red-700 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-red-800" type="button" onClick={onDelete}>Excluir</button>
+    </span>
+  )
+}
+
 // Formulario
-function PlanoForm({ onNavigate, onNotice, notice }: FormProps) {
+function PlanoForm({ onNavigate, onNotice, notice, item }: FormProps & { item?: PlanoItem }) {
   return (
     <EntityForm
-      title="Cadastrar Plano"
+      title={item ? 'Editar Plano' : 'Cadastrar Plano'}
       back="planos"
-      endpoint="/plano/register"
+      endpoint={item ? `/plano/update/${item.idplano}` : '/plano/register'}
       onNavigate={onNavigate}
       onNotice={onNotice}
       notice={notice}
+      initialValues={item}
+      submitLabel={item ? 'Salvar alteraÃ§Ãµes' : 'Cadastrar'}
       fields={[
         { label: 'Nome', name: 'descricao' },
         // os radios são obrigatórios, se não marcar Sim/Não o form não envia
         {
           label: 'Desconta',
-          name: 'desconta',
+          name: 'aplicadesconto',
           type: 'radio',
           options: [
             { label: 'Sim', value: 'true' },
             { label: 'Não', value: 'false' },
           ],
         },
-        { label: 'Valor Desconto', name: 'valor_desconto' },
+        { label: 'Valor Desconto', name: 'valordesconto' },
         {
           label: 'Exonera',
           name: 'exonera',
@@ -655,7 +739,7 @@ type EntityFieldConfig =
       options: Array<{ label: string; value: string }>
     }
 
-function PatientForm({ onNavigate, onNotice, notice }: FormProps) {
+function PatientForm({ onNavigate, onNotice, notice, item }: FormProps & { item?: RecordItem }) {
   const [tags, setTags] = useState<SelectOption[]>([])
   const [planos, setPlanos] = useState<SelectOption[]>([])
 
@@ -697,12 +781,14 @@ function PatientForm({ onNavigate, onNotice, notice }: FormProps) {
 
   return (
     <EntityForm
-      title="Cadastrar Paciente"
+      title={item ? 'Editar Paciente' : 'Cadastrar Paciente'}
       back="pacientes"
-      endpoint="/pacientes/register" 
+      endpoint={item ? `/pacientes/update/${item.idpaciente ?? item.idpacientes}` : '/pacientes/register'}
       onNavigate={onNavigate}
       onNotice={onNotice}
       notice={notice}
+      initialValues={item}
+      submitLabel={item ? 'Salvar alteraÃ§Ãµes' : 'Cadastrar'}
       fields={[
         { label: 'Nome', name: 'nome' },
         { label: 'CPF', name: 'cpf' },
@@ -732,15 +818,17 @@ function PatientForm({ onNavigate, onNotice, notice }: FormProps) {
   )
 }
 
-function ProfessionalForm({ onNavigate, onNotice, notice }: FormProps) {
+function ProfessionalForm({ onNavigate, onNotice, notice, item }: FormProps & { item?: RecordItem }) {
   return (
     <EntityForm
-      title="Cadastrar Profissional"
+      title={item ? 'Editar Profissional' : 'Cadastrar Profissional'}
       back="profissionais"
-      endpoint="/doutores/register"
+      endpoint={item ? `/doutores/update/${item.iddoutor}` : '/doutores/register'}
       onNavigate={onNavigate}
       onNotice={onNotice}
       notice={notice}
+      initialValues={item}
+      submitLabel={item ? 'Salvar alteraÃ§Ãµes' : 'Cadastrar'}
       fields={[
         { label: 'Nome', name: 'nome' },
         { label: 'Especialidade', name: 'especialidade' },
@@ -750,15 +838,17 @@ function ProfessionalForm({ onNavigate, onNotice, notice }: FormProps) {
   )
 }
 
-function TagForm({ onNavigate, onNotice, notice }: FormProps) {
+function TagForm({ onNavigate, onNotice, notice, item }: FormProps & { item?: TagItem }) {
   return (
     <EntityForm
-      title="Cadastrar Tag"
+      title={item ? 'Editar Tag' : 'Cadastrar Tag'}
       back="tags"
-      endpoint="/tags/register"
+      endpoint={item ? `/tag/update/${item.idtag}` : '/tag/register'}
       onNavigate={onNavigate}
       onNotice={onNotice}
       notice={notice}
+      initialValues={item}
+      submitLabel={item ? 'Salvar alteraÃ§Ãµes' : 'Cadastrar'}
       fields={[{ label: 'Nome da Tag', name: 'descricao' }]}
     />
   )
@@ -772,6 +862,8 @@ function EntityForm({
   onNavigate,
   onNotice,
   notice,
+  initialValues,
+  submitLabel = 'Cadastrar',
 }: {
   title: string
   back: Page
@@ -780,9 +872,11 @@ function EntityForm({
   onNavigate: (page: Page) => void
   onNotice: (notice: string) => void
   notice: string
+  initialValues?: Record<string, string | number | boolean | undefined>
+  submitLabel?: string
 }) {
   const [values, setValues] = useState<Record<string, string>>(() =>
-    Object.fromEntries(fields.map((field) => [field.name, ''])),
+    Object.fromEntries(fields.map((field) => [field.name, String(initialValues?.[field.name] ?? '')])),
   )
 
   async function submit(event: FormEvent) {
@@ -823,7 +917,7 @@ function EntityForm({
               }
             />
           ))}
-          <button className='cadastrar' type="submit">Cadastrar</button>
+          <button className='cadastrar' type="submit">{submitLabel}</button>
         </form>
         <div className="mt-5 text-center">
           <p>
