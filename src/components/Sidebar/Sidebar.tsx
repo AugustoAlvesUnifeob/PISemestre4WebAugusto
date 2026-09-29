@@ -27,7 +27,7 @@ export function Sidebar({
         onNavigate: (page: Page) => void
         children: React.ReactNode
     }) {
-        const { user } = useAuth()
+        const { user, logout } = useAuth()
 
         return (
 
@@ -37,7 +37,20 @@ export function Sidebar({
 
                 <div className="bg-[#4f7161] px-5 py-6 text-white md:py-8">
                     <h2 className="text-4xl font-bold">EasyClinic</h2>
-                    <h2 className="text-1xl font-bold">Bem-vindo, {user?.usuario}!</h2>
+
+                    <div className="flex items-center gap-2">
+                         <h2 className="text-1xl font-bold">
+                            Bem-vindo, {user?.usuario}!
+                        </h2>
+
+                        <button
+                            onClick={() => onNavigate('editarUsuario')}
+                            className="cursor-pointer"
+                            title="Editar usuário"
+                        >
+                             ✎
+                        </button>
+                    </div>
                 </div>
 
                 <nav className="bg-white px-4 py-5 md:min-h-[calc(100vh-120px)]">
@@ -82,7 +95,6 @@ export function Sidebar({
                         Planos
                         </li>
 
-                        <li className="cursor-pointer rounded-full px-3 py-2 text-[#2d2d2d] transition hover:bg-[#edf4f0] md:mb-4" onClick={() => onNavigate('inicio')}>Documentos</li>
 
                     </ul>
                 </nav>

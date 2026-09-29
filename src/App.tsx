@@ -1,7 +1,7 @@
 // --------------------
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import{  Agenda } from './components/Agenda/AgendaWidget';
+import { Agenda } from './components/Agenda/AgendaWidget';
 import './index.css';
 import { Assets } from './components/AssetsClass';
 import { useAuth } from './context/AuthContext'
@@ -308,7 +308,7 @@ function AuthLayout({
           <h1 className="mb-4 text-8xl font-bold">EasyClinic</h1>
           <p className="text-lg">Sistema de Gestão para Clínicas</p>
           <br></br>
-          <img src={Assets.Imagens.people} alt='people'/>
+          <img src={Assets.Imagens.people} alt='people' />
         </div>
       </div>
       <div className="flex min-h-[calc(100vh-220px)] w-full items-center justify-center bg-white px-5 py-8 md:min-h-screen md:w-[55%]">
@@ -375,7 +375,7 @@ function EntityField({
     )
   }
 
-   if (field.type === 'radio') {
+  if (field.type === 'radio') {
     return (
       <div className="space-y-1">
         <label className="block text-sm text-gray-600">{field.label}</label>
@@ -428,8 +428,127 @@ function Dashboard({ onNavigate }: { onNavigate: (page: Page) => void }) {
           <li>Profissionais cadastrados</li>
           <li>Informações da clínica</li>
           <li> ISTO ESTÁ EM DESENVOLVIMENTO (só um adendo rs)</li>
-          <Agenda/>
+          <Agenda />
         </ul>
+      </div>
+    </Sidebar>
+  )
+}
+
+function EditUserPage({
+  onNavigate,
+}: {
+  onNavigate: (page: Page) => void
+}) {
+  const { user } = useAuth()
+
+  const [usuario, setUsuario] = useState(user?.usuario || '')
+  const [email, setEmail] = useState('')
+  const [senha, setSenha] = useState('')
+  const [confirmarSenha, setConfirmarSenha] = useState('')
+  const [mensagem, setMensagem] = useState('')
+
+  function salvarUsuario() {
+    if (!usuario.trim()) {
+      setMensagem('Preencha o nome do usuário.')
+      return
+    }
+
+    if (!email.trim()) {
+      setMensagem('Preencha o e-mail.')
+      return
+    }
+
+    if (senha && senha !== confirmarSenha) {
+      setMensagem('As senhas não coincidem.')
+      return
+    }
+
+    setMensagem(
+      'Dados validados. A atualização será concluída após a integração com a API.'
+    )
+  }
+
+  return (
+    <Sidebar active="editarUsuario" onNavigate={onNavigate}>
+      <div className="mx-auto max-w-2xl rounded-[10px] bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.1)] md:p-8">
+
+        <h1 className="mb-2 text-2xl font-bold text-[#4f7161]">
+          Editar Usuário
+        </h1>
+
+        <p className="mb-7 text-sm text-gray-500">
+          Atualize os dados da sua conta.
+        </p>
+
+        <div className="space-y-4">
+
+          <Field
+            label="Usuário"
+            value={usuario}
+            onChange={setUsuario}
+          />
+
+          <Field
+            label="E-mail"
+            type="email"
+            value={email}
+            onChange={setEmail}
+          />
+
+          <div className="border-t border-gray-200 pt-5">
+            <h2 className="mb-1 font-semibold text-[#4f7161]">
+              Alterar senha
+            </h2>
+
+            <p className="mb-4 text-sm text-gray-500">
+              Preencha os campos abaixo somente se desejar alterar sua senha.
+            </p>
+
+            <div className="space-y-4">
+              <Field
+                label="Nova senha"
+                type="password"
+                value={senha}
+                onChange={setSenha}
+              />
+
+              <Field
+                label="Confirmar nova senha"
+                type="password"
+                value={confirmarSenha}
+                onChange={setConfirmarSenha}
+              />
+            </div>
+          </div>
+
+          {mensagem && (
+            <p className="text-center text-sm text-[#4f7161]">
+              {mensagem}
+            </p>
+          )}
+
+          <div className="flex gap-3 pt-2">
+
+            <button
+              type="button"
+              onClick={() => onNavigate('inicio')}
+              className="cursor-pointer w-full rounded-lg border border-[#4f7161] px-3 py-3 text-[#4f7161] transition hover:bg-[#edf4f0]"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="button"
+              onClick={salvarUsuario}
+              className="cursor-pointer w-full rounded-lg bg-[#4f7161] px-3 py-3 text-white transition hover:bg-[#3f5c4f]"
+            >
+              Salvar alterações
+            </button>
+
+          </div>
+
+        </div>
       </div>
     </Sidebar>
   )
@@ -722,22 +841,22 @@ function PlanoForm({ onNavigate, onNotice, notice, item }: FormProps & { item?: 
 
 type EntityFieldConfig =
   | {
-      label: string
-      name: string
-      type?: 'text' | 'email' | 'password'
-    }
+    label: string
+    name: string
+    type?: 'text' | 'email' | 'password'
+  }
   | {
-      label: string
-      name: string
-      type: 'select'
-      options: Array<{ label: string; value: string }>
-    }
+    label: string
+    name: string
+    type: 'select'
+    options: Array<{ label: string; value: string }>
+  }
   | {
-      label: string
-      name: string
-      type: 'radio'
-      options: Array<{ label: string; value: string }>
-    }
+    label: string
+    name: string
+    type: 'radio'
+    options: Array<{ label: string; value: string }>
+  }
 
 function PatientForm({ onNavigate, onNotice, notice, item }: FormProps & { item?: RecordItem }) {
   const [tags, setTags] = useState<SelectOption[]>([])
