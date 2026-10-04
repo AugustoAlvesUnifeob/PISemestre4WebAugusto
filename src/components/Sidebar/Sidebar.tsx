@@ -16,6 +16,7 @@ type Page =
   | 'editarProfissional'
   | 'editarTag'
   | 'editarPlano'
+    | 'editarUsuario'
 ;
 
 export function Sidebar({
@@ -33,7 +34,7 @@ export function Sidebar({
 
             <div className="flex min-h-screen flex-col md:flex-row">
 
-            <aside className="w-full bg-[#e7efe9] md:min-h-screen md:w-[260px] md:shrink-0">
+            <aside className="w-full bg-[#e7efe9] md:sticky md:top-0 md:flex md:h-screen md:min-h-0 md:w-[260px] md:shrink-0 md:flex-col">
 
                 <div className="bg-[#4f7161] px-5 py-6 text-white md:py-8">
                     <h2 className="text-4xl font-bold">EasyClinic</h2>
@@ -44,6 +45,7 @@ export function Sidebar({
                         </h2>
 
                         <button
+                            //Nao está implementado isso ainda
                             onClick={() => onNavigate('editarUsuario')}
                             className="cursor-pointer"
                             title="Editar usuário"
@@ -53,7 +55,7 @@ export function Sidebar({
                     </div>
                 </div>
 
-                <nav className="bg-white px-4 py-5 md:min-h-[calc(100vh-120px)]">
+                <nav className="bg-white px-4 py-5 md:min-h-0 md:flex-1 md:overflow-y-auto">
                     <ul className="flex flex-wrap gap-x-5 gap-y-3 md:block">
                         
                         <li

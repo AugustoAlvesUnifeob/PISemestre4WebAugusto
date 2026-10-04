@@ -8,10 +8,27 @@ body,
 
 body {
   margin: 0;
-  background-color: #eef4ef;
+  background-color: #8aa888;
   font-family: Arial, sans-serif;
 }
 
+.layout {
+  display: flex; 
+  min-height: 100vh;
+}
+
+.conteudo-principal {
+  flex: 1;
+  padding: 32px;
+}
+
+/* ESSE é o "card" branco que envolve o calendário/conteúdo da página */
+.card-conteudo {
+  background: white;
+  border-radius: 16px; /* cantos arredondados, como no protótipo */
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* sombra sutil pra dar profundidade */
+}
 .cadastrar {
     width: 100%;
     padding: 12px;

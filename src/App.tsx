@@ -25,6 +25,7 @@ type Page =
   | 'editarProfissional'
   | 'editarTag'
   | 'editarPlano'
+  | 'editarUsuario'
 
 type RecordItem = {
   nome: string
@@ -72,7 +73,8 @@ const protectedPages: Page[] = [
   'editarPaciente',
   'editarProfissional',
   'editarTag',
-  'editarPlano'
+  'editarPlano',
+  'editarUsuario'
 ]
 
 function App() {
@@ -110,6 +112,9 @@ function App() {
         <Register onNavigate={goTo} onNotice={setNotice} notice={notice} />
       )}
       {visiblePage === 'inicio' && <Dashboard onNavigate={goTo} />}
+      {visiblePage === 'editarUsuario' && (
+        <EditUserPage onNavigate={goTo} />
+      )}
       {visiblePage === 'pacientes' && (
         <RecordsPage kind="pacientes" onNavigate={goTo} onEdit={(item) => beginEdit('editarPaciente', item)} />
       )}
@@ -415,21 +420,43 @@ function EntityField({
 }
 
 function Dashboard({ onNavigate }: { onNavigate: (page: Page) => void }) {
+  const indicators = ['Consultas', 'Pacientes', 'Profissionais']
+
   return (
     <Sidebar active="inicio" onNavigate={onNavigate}>
-      <h1 className="mb-7 text-3xl font-bold text-[#4f7161]">Início</h1>
-      <div className="rounded-[10px] bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
-        <h3 className="mb-4 text-lg font-semibold text-[#4f7161]">Login realizado com sucesso</h3>
-        <p className="mb-2">Esta é a tela inicial do sistema.</p>
-        <p className="mb-2">Em breve aqui serão exibidos:</p>
-        <ul className="mt-2 list-disc pl-5">
-          <li>Agendamentos do dia</li>
-          <li>Pacientes cadastrados</li>
-          <li>Profissionais cadastrados</li>
-          <li>Informações da clínica</li>
-          <li> ISTO ESTÁ EM DESENVOLVIMENTO (só um adendo rs)</li>
-          <Agenda />
-        </ul>
+      <div className="-m-6 min-h-screen bg-[#a4c2aa] p-6 md:-m-10 md:p-10">
+        <h1 className="mb-5 text-2xl font-bold text-[#ffffff]">INÍCIO</h1>
+
+        <section className="mb-6">
+          <h2 className="rounded-t-lg bg-[#5f846e] px-4 py-3 text-sm font-bold text-white">
+            AGENDA DA SEMANA
+          </h2>
+          <div className="rounded-b-lg bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
+            <Agenda />
+          </div>
+        </section>
+
+        <section>
+          <h2 className="mb-4 rounded-lg bg-[#5f846e] px-4 py-3 text-sm font-bold text-white">
+            MOVIMENTO
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {indicators.map((indicator) => (
+              <article key={indicator} className="rounded-lg bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
+                <h3 className="mb-3 text-sm font-semibold text-[#4f7161]">{indicator}</h3>
+                <div
+                  className="flex h-36 items-center justify-center rounded border border-[#e1e8e3] text-center text-sm text-gray-500"
+                  style={{
+                    backgroundImage: 'linear-gradient(#e8ede9 1px, transparent 1px), linear-gradient(90deg, #e8ede9 1px, transparent 1px)',
+                    backgroundSize: '100% 25%, 20% 100%',
+                  }}
+                >
+                  <span className="bg-white/90 px-3 py-1">Sem dados disponíveis</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
       </div>
     </Sidebar>
   )
@@ -440,115 +467,147 @@ function EditUserPage({
 }: {
   onNavigate: (page: Page) => void
 }) {
-  const { user } = useAuth()
-
-  const [usuario, setUsuario] = useState(user?.usuario || '')
+  const { user, login } = useAuth()
+  const userId = user?.idusuario
+  const [usuario, setUsuario] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [confirmarSenha, setConfirmarSenha] = useState('')
   const [mensagem, setMensagem] = useState('')
+  const [erro, setErro] = useState(false)
+  const [carregando, setCarregando] = useState(Boolean(userId))
+  const [salvando, setSalvando] = useState(false)
 
-  function salvarUsuario() {
+  useEffect(() => {
+    if (!userId) return
+
+    let cancelado = false
+
+    async function carregarUsuario() {
+      try {
+        const response = await fetchWithToken(`${API_URL}/users/${userId}`)
+        const data = await readResponse(response)
+        if (!response.ok) throw new Error(messageFrom(data))
+        if (!data.user) throw new Error('Não foi possível carregar os dados do usuário.')
+
+        if (!cancelado) {
+          setUsuario(data.user.usuario || '')
+          setEmail(data.user.email || '')
+        }
+      } catch (error) {
+        if (!cancelado) {
+          setMensagem(error instanceof Error ? error.message : 'Erro ao carregar usuário.')
+          setErro(true)
+        }
+      } finally {
+        if (!cancelado) setCarregando(false)
+      }
+    }
+
+    void carregarUsuario()
+    return () => {
+      cancelado = true
+    }
+  }, [userId])
+
+  const mensagemVisivel = userId ? mensagem : 'Não foi possível identificar o usuário da sessão.'
+  const erroVisivel = !userId || erro
+
+  async function salvarUsuario(event: FormEvent) {
+    event.preventDefault()
     if (!usuario.trim()) {
       setMensagem('Preencha o nome do usuário.')
+      setErro(true)
       return
     }
 
     if (!email.trim()) {
       setMensagem('Preencha o e-mail.')
+      setErro(true)
       return
     }
 
     if (senha && senha !== confirmarSenha) {
       setMensagem('As senhas não coincidem.')
+      setErro(true)
       return
     }
 
-    setMensagem(
-      'Dados validados. A atualização será concluída após a integração com a API.'
-    )
+    if (!user?.idusuario) return
+
+    setSalvando(true)
+    setMensagem('')
+    setErro(false)
+
+    try {
+      const response = await post(`/users/update/${user.idusuario}`, {
+        usuario: usuario.trim(),
+        email: email.trim(),
+        senha,
+        tipo: user.tipo,
+        clinica_cnpj: user.clinica_cnpj,
+      })
+      if (!response.ok) throw new Error(messageFrom(response.data))
+      if (response.data.token) login(response.data.token)
+
+      setSenha('')
+      setConfirmarSenha('')
+      setMensagem('Dados atualizados com sucesso.')
+    } catch (error) {
+      setMensagem(error instanceof Error ? error.message : 'Erro ao atualizar usuário.')
+      setErro(true)
+    } finally {
+      setSalvando(false)
+    }
   }
 
   return (
     <Sidebar active="editarUsuario" onNavigate={onNavigate}>
       <div className="mx-auto max-w-2xl rounded-[10px] bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.1)] md:p-8">
+        <h1 className="mb-2 text-2xl font-bold text-[#4f7161]">Editar usuário</h1>
+        <p className="mb-7 text-sm text-gray-500">Atualize os dados da sua conta.</p>
 
-        <h1 className="mb-2 text-2xl font-bold text-[#4f7161]">
-          Editar Usuário
-        </h1>
+        <form className="space-y-5" onSubmit={salvarUsuario}>
+          <fieldset disabled={carregando || salvando} className="space-y-4">
+            <Field label="Usuário" value={usuario} onChange={setUsuario} />
+            <Field label="E-mail" type="email" value={email} onChange={setEmail} />
 
-        <p className="mb-7 text-sm text-gray-500">
-          Atualize os dados da sua conta.
-        </p>
-
-        <div className="space-y-4">
-
-          <Field
-            label="Usuário"
-            value={usuario}
-            onChange={setUsuario}
-          />
-
-          <Field
-            label="E-mail"
-            type="email"
-            value={email}
-            onChange={setEmail}
-          />
-
-          <div className="border-t border-gray-200 pt-5">
-            <h2 className="mb-1 font-semibold text-[#4f7161]">
-              Alterar senha
-            </h2>
-
-            <p className="mb-4 text-sm text-gray-500">
-              Preencha os campos abaixo somente se desejar alterar sua senha.
-            </p>
-
-            <div className="space-y-4">
-              <Field
-                label="Nova senha"
-                type="password"
-                value={senha}
-                onChange={setSenha}
-              />
-
-              <Field
-                label="Confirmar nova senha"
-                type="password"
-                value={confirmarSenha}
-                onChange={setConfirmarSenha}
-              />
+            <div className="border-t border-gray-200 pt-5">
+              <h2 className="mb-1 font-semibold text-[#4f7161]">Alterar senha</h2>
+              <p className="mb-4 text-sm text-gray-500">
+                Deixe os campos em branco para manter a senha atual.
+              </p>
+              <div className="space-y-4">
+                <Field label="Nova senha" type="password" value={senha} onChange={setSenha} />
+                <Field label="Confirmar nova senha" type="password" value={confirmarSenha} onChange={setConfirmarSenha} />
+              </div>
             </div>
-          </div>
+          </fieldset>
 
-          {mensagem && (
-            <p className="text-center text-sm text-[#4f7161]">
-              {mensagem}
+          {carregando && <p className="text-sm text-gray-500">Carregando dados...</p>}
+          {mensagemVisivel && (
+            <p role={erroVisivel ? 'alert' : 'status'} className={`text-sm ${erroVisivel ? 'text-red-700' : 'text-[#4f7161]'}`}>
+              {mensagemVisivel}
             </p>
           )}
 
-          <div className="flex gap-3 pt-2">
-
+          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row">
             <button
               type="button"
               onClick={() => onNavigate('inicio')}
-              className="cursor-pointer w-full rounded-lg border border-[#4f7161] px-3 py-3 text-[#4f7161] transition hover:bg-[#edf4f0]"
+              className="w-full cursor-pointer rounded-lg border border-[#4f7161] px-3 py-3 text-[#4f7161] transition hover:bg-[#edf4f0]"
             >
               Cancelar
             </button>
-
             <button
-              type="button"
-              onClick={salvarUsuario}
-              className="cursor-pointer w-full rounded-lg bg-[#4f7161] px-3 py-3 text-white transition hover:bg-[#3f5c4f]"
+              type="submit"
+              disabled={carregando || salvando}
+              className="w-full cursor-pointer rounded-lg bg-[#4f7161] px-3 py-3 text-white transition hover:bg-[#3f5c4f] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Salvar alterações
+              {salvando ? 'Salvando...' : 'Salvar alterações'}
             </button>
-
           </div>
-
-        </div>
+        </form>
       </div>
     </Sidebar>
   )

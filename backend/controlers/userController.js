@@ -70,28 +70,23 @@ module.exports = class UserController{
                 return res.status(404).json({message: "usuário não encontrado"})
             }
 
-            let passwordHash
+            const updatedFields = { usuario, email, tipo, clinica_cnpj }
 
             //só se a senha vier
             if(senha){
                 //criptografar senha
                 const salt = await bcrypt.genSalt(12)
-                passwordHash = await bcrypt.hash(senha, salt)
+                updatedFields.senha = await bcrypt.hash(senha, salt)
             }
 
             await User.update(
-                {
-                    usuario: usuario,
-                    email: email,
-                    senha: passwordHash,
-                    tipo: tipo,
-                    clinica_cnpj: clinica_cnpj
-                },
+                updatedFields,
                 {
                     where: {idusuario: idusuario}
                 }
             )
-            res.status(200).json({message:'Usuario alterado com sucesso'})
+            const updatedUser = await User.findByPk(idusuario)
+            await createUserToken(updatedUser, req, res)
         }catch(error){
             res.status(500).json({message: error})
         }
@@ -136,16 +131,17 @@ module.exports = class UserController{
     }
 
     static async listarOne(req, res){
-        const idusuario = req.params
+        const { idusuario } = req.params
 
         try{
-            const Users = await User.findOne({where: idusuario})
-            if(!Users){
-                Users = "Usuário não cadastrado"
-            }
+            const user = await User.findByPk(idusuario, {
+                attributes: ['idusuario', 'usuario', 'email', 'tipo', 'clinica_cnpj']
+            })
+            if(!user) return res.status(404).json({message: 'Usuário não cadastrado'})
+            return res.status(200).json({user})
         }
         catch(error){
-            res.status(500).json({error: error})
+            return res.status(500).json({message: error.message})
         }
     }
 }

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import FullCalendar from '@fullcalendar/react'
+import ptBrLocale from '@fullcalendar/core/locales/pt-br'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
-import NovaConsultaModal from './NovaConsultaModal'
+import NovaConsultaModal from '.Agenda/NovaConsultaModal'
 import DetalhesConsultaModal from './DetalhesConsultaModal'
 
 export function Agenda(){
@@ -60,13 +61,20 @@ export function Agenda(){
     
     return(
         <div>
-            <button onClick={() => setModalNovaAberto(true)}> +Nova Consulta </button>
+            <button
+                className="mb-3 rounded-md bg-[#4f7161] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#3f5c4f]"
+                onClick={() => setModalNovaAberto(true)}
+            >
+                + Nova consulta
+            </button>
 
             <FullCalendar
                 plugins={[timeGridPlugin, interactionPlugin]}
                 initialView="timeGridWeek"
+                locale={ptBrLocale}
                 eventClick={handleEventClick}
                 events={eventos}
+                height={240}
                 slotMinTime="06:00:00"
                 slotMaxTime="19:00:00"
             />
