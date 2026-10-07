@@ -35,11 +35,22 @@ type RecordItem = {
   telefone?: string
   email?: string
   complemento?: string
-  tag_idtag?: number
+  tag_ids?: number[]
   plano_idplano?: number
   idpaciente?: number
   idpacientes?: number
   iddoutor?: number
+}
+
+type PatientAnamnese = {
+  idanaminese: number
+  queixas?: string | null
+  historicoatual?: string | null
+  doencaspreexistentes?: string | null
+  medicamentos?: string | null
+  alergias?: string | null
+  cirurgiasanteriores?: string | null
+  historicofamiliar?: string | null
 }
 
 type TagItem = {
@@ -380,6 +391,42 @@ function EntityField({
     )
   }
 
+  if (field.type === 'multiselect') {
+    const selectedValues = value ? value.split(',') : []
+    return (
+      <fieldset className="space-y-2">
+        <legend className="text-sm text-gray-600">{field.label}</legend>
+        {field.options.length ? (
+          <div className="grid gap-2 rounded-lg border border-gray-300 p-3 sm:grid-cols-2">
+            {field.options.map((option) => (
+              <label
+                className="flex cursor-pointer items-center gap-2 text-sm text-gray-700"
+                key={option.value}
+              >
+                <input
+                  checked={selectedValues.includes(option.value)}
+                  className="h-4 w-4 accent-[#4f7161]"
+                  onChange={(event) => {
+                    const nextValues = event.target.checked
+                      ? [...selectedValues, option.value]
+                      : selectedValues.filter((selected) => selected !== option.value)
+                    onChange(nextValues.join(','))
+                  }}
+                  type="checkbox"
+                />
+                {option.label}
+              </label>
+            ))}
+          </div>
+        ) : (
+          <p className="rounded-lg border border-gray-300 p-3 text-sm text-gray-500">
+            Nenhuma tag cadastrada.
+          </p>
+        )}
+      </fieldset>
+    )
+  }
+
   if (field.type === 'radio') {
     return (
       <div className="space-y-1">
@@ -625,6 +672,8 @@ function RecordsPage({
   const [items, setItems] = useState<RecordItem[]>([])
   const [query, setQuery] = useState('')
   const [error, setError] = useState(false)
+  const [anamnesePatient, setAnamnesePatient] = useState<RecordItem | null>(null)
+  const [notice, setNotice] = useState('')
   const isPatients = kind === 'pacientes'
 
   // useEffect executa o carregamento quando a página é montada ou quando kind muda.
@@ -650,13 +699,26 @@ function RecordsPage({
       if (!response.ok) throw new Error(messageFrom(response.data))
       setItems((current) => current.filter((currentItem) => currentItem !== item))
     } catch (deleteError) {
-      window.alert(deleteError instanceof Error ? deleteError.message : 'NÃ£o foi possÃ­vel excluir o registro.')
+      window.alert(deleteError instanceof Error ? deleteError.message : 'Não foi possível excluir o registro.')
     }
+  }
+  const beginAnamnese = (item: RecordItem) => {
+    if (!item.idpaciente && !item.idpacientes) {
+      window.alert('Não foi possível identificar o paciente.')
+      return
+    }
+    setNotice('')
+    setAnamnesePatient(item)
   }
 
   // JSX permite renderização condicional usando expressões JavaScript.
   return (
     <Sidebar active={kind} onNavigate={onNavigate}>
+      {notice && (
+        <p className="mb-4 rounded-lg bg-[#eef4ef] px-4 py-3 text-[#3f5c4f]" role="status">
+          {notice}
+        </p>
+      )}
       <div className="mb-6 flex items-center gap-4">
         <input
           className="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#4f7161] focus:outline-none focus:ring-2 focus:ring-[#4f7161]/20"
@@ -682,9 +744,14 @@ function RecordsPage({
             filtered.map((item) => (
               <li className="mb-2 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-[#eef4ef] px-4 py-3.5 text-gray-800 last:mb-0" key={item.idpaciente || item.idpacientes || item.iddoutor || item.nome}>
                 <span className="font-bold">
-                  CÃ³digo: {isPatients ? item.idpaciente ?? item.idpacientes : item.iddoutor} — {isPatients ? item.nome : `${item.nome} - ${item.especialidade}`}
+                  {isPatients ? item.idpaciente ?? item.idpacientes : item.iddoutor} — {isPatients ? item.nome : `${item.nome} - ${item.especialidade}`}
                 </span>
-                <ListActions onEdit={() => onEdit(item)} onDelete={() => deleteItem(item)} />
+                <ListActions
+                  onEdit={() => onEdit(item)}
+                  onDelete={() => deleteItem(item)}
+                  onAddAnamnese={isPatients ? () => beginAnamnese(item) : undefined}
+                  patientName={isPatients ? item.nome : undefined}
+                />
               </li>
             ))
           ) : (
@@ -696,7 +763,206 @@ function RecordsPage({
           )}
         </ul>
       </div>
+      {anamnesePatient && (
+        <PatientAnamneseModal
+          patient={anamnesePatient}
+          onClose={() => setAnamnesePatient(null)}
+          onSaved={(wasUpdated) => {
+            setAnamnesePatient(null)
+            setNotice(
+              wasUpdated
+                ? 'Anamnese atualizada com sucesso.'
+                : 'Anamnese cadastrada com sucesso.',
+            )
+          }}
+        />
+      )}
     </Sidebar>
+  )
+}
+
+function PatientAnamneseModal({
+  patient,
+  onClose,
+  onSaved,
+}: {
+  patient: RecordItem
+  onClose: () => void
+  onSaved: (wasUpdated: boolean) => void
+}) {
+  const patientId = patient.idpaciente ?? patient.idpacientes
+  const [anamnese, setAnamnese] = useState<PatientAnamnese | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [values, setValues] = useState({
+    queixas: '',
+    historicoatual: '',
+    doencaspreexistentes: '',
+    medicamentos: '',
+    alergias: '',
+    cirurgiasanteriores: '',
+    historicofamiliar: '',
+  })
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    let active = true
+
+    async function loadAnamnese() {
+      if (!patientId) {
+        setError('Não foi possível identificar o paciente.')
+        setLoading(false)
+        return
+      }
+
+      try {
+        const response = await fetchWithToken(
+          `${API_URL}/anaminese/paciente/${patientId}`,
+        )
+        const data = await readResponse(response)
+        if (!response.ok) throw new Error(messageFrom(data))
+        if (!active) return
+
+        const savedAnamnese = data.anaminese as PatientAnamnese | null
+        setAnamnese(savedAnamnese)
+        if (savedAnamnese) {
+          setValues({
+            queixas: savedAnamnese.queixas ?? '',
+            historicoatual: savedAnamnese.historicoatual ?? '',
+            doencaspreexistentes: savedAnamnese.doencaspreexistentes ?? '',
+            medicamentos: savedAnamnese.medicamentos ?? '',
+            alergias: savedAnamnese.alergias ?? '',
+            cirurgiasanteriores: savedAnamnese.cirurgiasanteriores ?? '',
+            historicofamiliar: savedAnamnese.historicofamiliar ?? '',
+          })
+        }
+      } catch (loadError) {
+        if (active) {
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : 'Não foi possível carregar a anamnese.',
+          )
+        }
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+
+    loadAnamnese()
+    return () => {
+      active = false
+    }
+  }, [patientId])
+
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    if (loading) return
+    if (!Object.values(values).some((value) => value.trim())) {
+      setError('Preencha ao menos um campo da anamnese.')
+      return
+    }
+
+    if (!patientId) {
+      setError('Não foi possível identificar o paciente.')
+      return
+    }
+
+    setSaving(true)
+    setError('')
+    try {
+      const response = anamnese
+        ? await post(`/anaminese/update/${anamnese.idanaminese}`, values)
+        : await post('/anaminese/register', {
+            ...values,
+            pacientes_idpacientes: patientId,
+          })
+      if (!response.ok) throw new Error(messageFrom(response.data))
+      onSaved(Boolean(anamnese))
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : 'Não foi possível cadastrar a anamnese.',
+      )
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const fields: { name: keyof typeof values; label: string }[] = [
+    { name: 'queixas', label: 'Queixas' },
+    { name: 'historicoatual', label: 'Histórico atual' },
+    { name: 'doencaspreexistentes', label: 'Doenças preexistentes' },
+    { name: 'medicamentos', label: 'Medicamentos' },
+    { name: 'alergias', label: 'Alergias' },
+    { name: 'cirurgiasanteriores', label: 'Cirurgias anteriores' },
+    { name: 'historicofamiliar', label: 'Histórico familiar' },
+  ]
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={onClose}
+    >
+      <div
+        aria-labelledby="anamnese-modal-title"
+        aria-modal="true"
+        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+      >
+        <h2 id="anamnese-modal-title" className="mb-1 text-xl font-bold text-[#4f7161]">
+          {anamnese ? 'Editar anamnese' : 'Nova anamnese'}
+        </h2>
+        <p className="mb-5 text-sm text-gray-600">Paciente: {patient.nome}</p>
+        <form className="space-y-4" onSubmit={submit}>
+          {loading ? (
+            <p className="py-6 text-center text-gray-600">Carregando anamnese...</p>
+          ) : (
+            fields.map(({ name, label }) => (
+              <label className="block space-y-1" key={name}>
+                <span className="text-sm text-gray-600">{label}</span>
+                <textarea
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#4f7161] focus:outline-none focus:ring-2 focus:ring-[#4f7161]/20"
+                  maxLength={255}
+                  rows={2}
+                  value={values[name]}
+                  onChange={(event) =>
+                    setValues((current) => ({
+                      ...current,
+                      [name]: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+            ))
+          )}
+          {error && <p className="text-sm text-red-700" role="alert">{error}</p>}
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              className="rounded-lg border border-[#4f7161] px-4 py-2 text-[#4f7161] transition hover:bg-[#edf4f0]"
+              disabled={saving}
+              onClick={onClose}
+              type="button"
+            >
+              Cancelar
+            </button>
+            <button
+              className="rounded-lg bg-[#4f7161] px-4 py-2 font-semibold text-white transition hover:bg-[#3f5c4f] disabled:opacity-60"
+              disabled={saving || loading || Boolean(error)}
+              type="submit"
+            >
+              {saving
+                ? 'Salvando...'
+                : anamnese
+                  ? 'Salvar alterações'
+                  : 'Salvar anamnese'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   )
 }
 
@@ -725,7 +991,7 @@ function TagsPage({ onNavigate, onEdit }: { onNavigate: (page: Page) => void; on
       if (!response.ok) throw new Error(messageFrom(response.data))
       setTags((current) => current.filter(({ idtag }) => idtag !== tag.idtag))
     } catch (deleteError) {
-      window.alert(deleteError instanceof Error ? deleteError.message : 'NÃ£o foi possÃ­vel excluir a tag.')
+      window.alert(deleteError instanceof Error ? deleteError.message : 'Não foi possÃ­vel excluir a tag.')
     }
   }
 
@@ -758,7 +1024,7 @@ function TagsPage({ onNavigate, onEdit }: { onNavigate: (page: Page) => void; on
                 className="mb-2 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-[#eef4ef] px-4 py-3.5 text-gray-800 last:mb-0"
                 key={tag.idtag}
               >
-                <span className="font-bold">CÃ³digo: {tag.idtag} — {tag.descricao.toUpperCase()}</span>
+                <span className="font-bold">{tag.idtag} — {tag.descricao.toUpperCase()}</span>
                 <ListActions onEdit={() => onEdit(tag)} onDelete={() => deleteTag(tag)} />
               </li>
             ))
@@ -800,7 +1066,7 @@ function PlanosPage({ onNavigate, onEdit }: { onNavigate: (page: Page) => void; 
       if (!response.ok) throw new Error(messageFrom(response.data))
       setPlanos((current) => current.filter(({ idplano }) => idplano !== plano.idplano))
     } catch (deleteError) {
-      window.alert(deleteError instanceof Error ? deleteError.message : 'NÃ£o foi possÃ­vel excluir o plano.')
+      window.alert(deleteError instanceof Error ? deleteError.message : 'Não foi possÃ­vel excluir o plano.')
     }
   }
 
@@ -833,7 +1099,7 @@ function PlanosPage({ onNavigate, onEdit }: { onNavigate: (page: Page) => void; 
                 className="mb-2 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-[#eef4ef] px-4 py-3.5 text-gray-800 last:mb-0"
                 key={plano.idplano}
               >
-                <span className="font-bold">CÃ³digo: {plano.idplano} — {plano.descricao.toUpperCase()}</span>
+                <span className="font-bold">{plano.idplano} — {plano.descricao.toUpperCase()}</span>
                 <ListActions onEdit={() => onEdit(plano)} onDelete={() => deletePlano(plano)} />
               </li>
             ))
@@ -850,11 +1116,32 @@ function PlanosPage({ onNavigate, onEdit }: { onNavigate: (page: Page) => void; 
   )
 }
 
-function ListActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+function ListActions({
+  onEdit,
+  onDelete,
+  onAddAnamnese,
+  patientName,
+}: {
+  onEdit: () => void
+  onDelete: () => void
+  onAddAnamnese?: () => void
+  patientName?: string
+}) {
   return (
-    <span className="flex shrink-0 gap-2">
-      <button className="rounded-md bg-[#4f7161] px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-[#3f5c4f]" type="button" onClick={onEdit}>Editar</button>
-      <button className="rounded-md bg-red-700 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-red-800" type="button" onClick={onDelete}>Excluir</button>
+    <span className="flex shrink-0">
+      {onAddAnamnese && (
+        <button
+          aria-label={`Adicionar anamnese para ${patientName}`}
+          className="rounded-md px-2 py-1 text-xl font-bold text-[#3f5c4f] transition hover:bg-[#3f5c4f] hover:text-white"
+          onClick={onAddAnamnese}
+          title="Adicionar anamnese"
+          type="button"
+        >
+          🗒
+        </button>
+      )}
+      <button className="rounded-md px-2 py-1 text-xl font-bold text-[#4f7161] transition hover:bg-[#3f5c4f] hover:text-white" type="button" onClick={onEdit}>✎</button>
+      <button className="rounded-md px-2 py-1 text-xl font-bold text-red-800 transition hover:bg-red-800 hover:text-white" type="button" onClick={onDelete}>🗑</button>
     </span>
   )
 }
@@ -870,7 +1157,7 @@ function PlanoForm({ onNavigate, onNotice, notice, item }: FormProps & { item?: 
       onNotice={onNotice}
       notice={notice}
       initialValues={item}
-      submitLabel={item ? 'Salvar alteraÃ§Ãµes' : 'Cadastrar'}
+      submitLabel={item ? 'Salvar alterações' : 'Cadastrar'}
       fields={[
         { label: 'Nome', name: 'descricao' },
         // os radios são obrigatórios, se não marcar Sim/Não o form não envia
@@ -908,6 +1195,12 @@ type EntityFieldConfig =
     label: string
     name: string
     type: 'select'
+    options: Array<{ label: string; value: string }>
+  }
+  | {
+    label: string
+    name: string
+    type: 'multiselect'
     options: Array<{ label: string; value: string }>
   }
   | {
@@ -966,22 +1259,14 @@ function PatientForm({ onNavigate, onNotice, notice, item }: FormProps & { item?
       onNotice={onNotice}
       notice={notice}
       initialValues={item}
-      submitLabel={item ? 'Salvar alteraÃ§Ãµes' : 'Cadastrar'}
+      submitLabel={item ? 'Salvar alterações' : 'Cadastrar'}
       fields={[
         { label: 'Nome', name: 'nome' },
         { label: 'CPF', name: 'cpf' },
         { label: 'Telefone', name: 'telefone' },
         { label: 'E-mail', name: 'email', type: 'email' },
         { label: 'Complemento', name: 'complemento' },
-        {
-          label: 'Tag',
-          name: 'tag_idtag',
-          type: 'select',
-          options: [
-            { label: 'Selecione uma tag', value: '' },
-            ...tags,
-          ],
-        },
+        { label: 'Tags', name: 'tag_ids', type: 'multiselect', options: tags },
         {
           label: 'Plano',
           name: 'plano_idplano',
@@ -1006,7 +1291,7 @@ function ProfessionalForm({ onNavigate, onNotice, notice, item }: FormProps & { 
       onNotice={onNotice}
       notice={notice}
       initialValues={item}
-      submitLabel={item ? 'Salvar alteraÃ§Ãµes' : 'Cadastrar'}
+      submitLabel={item ? 'Salvar alterações' : 'Cadastrar'}
       fields={[
         { label: 'Nome', name: 'nome' },
         { label: 'Especialidade', name: 'especialidade' },
@@ -1026,7 +1311,7 @@ function TagForm({ onNavigate, onNotice, notice, item }: FormProps & { item?: Ta
       onNotice={onNotice}
       notice={notice}
       initialValues={item}
-      submitLabel={item ? 'Salvar alteraÃ§Ãµes' : 'Cadastrar'}
+      submitLabel={item ? 'Salvar alterações' : 'Cadastrar'}
       fields={[{ label: 'Nome da Tag', name: 'descricao' }]}
     />
   )
@@ -1050,7 +1335,7 @@ function EntityForm({
   onNavigate: (page: Page) => void
   onNotice: (notice: string) => void
   notice: string
-  initialValues?: Record<string, string | number | boolean | undefined>
+  initialValues?: Record<string, string | number | boolean | number[] | undefined>
   submitLabel?: string
 }) {
   const [values, setValues] = useState<Record<string, string>>(() =>
@@ -1059,11 +1344,16 @@ function EntityForm({
 
   async function submit(event: FormEvent) {
     event.preventDefault()
-    if (fields.some((field) => !values[field.name]))
+    if (fields.some((field) => field.type !== 'multiselect' && !values[field.name]))
       return onNotice('Por favor, preencha todos os campos obrigatórios!')
 
     const payload = Object.fromEntries(
-      fields.map((field) => [field.name, values[field.name]]),
+      fields.map((field) => [
+        field.name,
+        field.type === 'multiselect'
+          ? values[field.name].split(',').filter(Boolean).map(Number)
+          : values[field.name],
+      ]),
     )
 
     try {

@@ -5,6 +5,14 @@ const campoPesquisa = document.getElementById('pesquisarTag');
 
 let tags = [];
 
+function obterHeadersAutenticados() {
+    const token = localStorage.getItem('@App:token');
+    if (!token) {
+        throw new Error('Sessão expirada. Faça login novamente.');
+    }
+    return { Authorization: `Bearer ${token}` };
+}
+
 // Renderiza a lista de tags na tela, aplicando o filtro de pesquisa
 function renderizarTags(filtro = '') {
     listaTags.innerHTML = '';
@@ -36,7 +44,9 @@ function renderizarTags(filtro = '') {
 // Carregar as tags já cadastradas na API
 async function carregarTags() {
     try {
-        const response = await fetch(`${API_URL}/tags`);
+        const response = await fetch(`${API_URL}/tag/listarByCNPJ`, {
+            headers: obterHeadersAutenticados()
+        });
         const data = await response.json();
 
         if (!response.ok) {

@@ -29,9 +29,6 @@ const Paciente = conn.define('pacientes',{
     complemento:{
         type: DataTypes.STRING,
     },
-    tag_idtag:{
-        type: DataTypes.INTEGER,
-    },
     plano_idplano:{
         type: DataTypes.INTEGER,
         required: true

@@ -1,13 +1,11 @@
 const API_URL = 'http://localhost:5000';
 
-function obterClinicaCnpj() {
-
-    const usuarioLogado =
-        JSON.parse(localStorage.getItem('usuarioLogado'));
-
-    return usuarioLogado
-        ? usuarioLogado.clinica_cnpj
-        : null;
+function obterHeadersAutenticados() {
+    const token = localStorage.getItem('@App:token');
+    if (!token) {
+        throw new Error('Sessão expirada. Faça login novamente.');
+    }
+    return { Authorization: `Bearer ${token}` };
 }
 
 document
@@ -29,18 +27,6 @@ document
             return;
         }
 
-        const clinica_cnpj =
-            obterClinicaCnpj();
-
-        if (!clinica_cnpj) {
-
-            alert(
-                'Não foi possível identificar a clínica.'
-            );
-
-            return;
-        }
-
         try {
 
             const response = await fetch(
@@ -49,14 +35,14 @@ document
                     method: 'POST',
 
                     headers: {
+                        ...obterHeadersAutenticados(),
                         'Content-Type':
                             'application/json'
                     },
 
                     body: JSON.stringify({
                         nome,
-                        especialidade,
-                        clinica_cnpj
+                        especialidade
                     })
                 }
             );

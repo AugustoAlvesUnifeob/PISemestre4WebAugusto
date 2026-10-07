@@ -3,10 +3,12 @@ const API_URL = 'http://localhost:5000';
 const selectTag = document.getElementById('tag');
 const selectPlano = document.getElementById('plano');
 
-// Recupera os dados da clínica do usuário logado
-function obterClinicaCnpj() {
-    const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
-    return usuarioLogado ? usuarioLogado.clinica_cnpj : null;
+function obterHeadersAutenticados() {
+    const token = localStorage.getItem('@App:token');
+    if (!token) {
+        throw new Error('Sessão expirada. Faça login novamente.');
+    }
+    return { Authorization: `Bearer ${token}` };
 }
 
 // Preenche um <select> com os itens vindos da API
@@ -22,7 +24,9 @@ function preencherSelect(selectElement, itens, campoValor, campoTexto) {
 // Carrega as Tags cadastradas da clínica
 async function carregarTags() {
     try {
-        const response = await fetch(`${API_URL}/tags`);
+        const response = await fetch(`${API_URL}/tag/listarByCNPJ`, {
+            headers: obterHeadersAutenticados()
+        });
         const data = await response.json();
 
         if (!response.ok) {
@@ -33,13 +37,17 @@ async function carregarTags() {
 
     } catch (error) {
         console.error('Erro ao carregar tags:', error);
+        selectTag.replaceChildren(new Option('Não foi possível carregar tags', ''));
+        selectTag.disabled = true;
     }
 }
 
 // Carrega os Planos cadastrados da clínica
 async function carregarPlanos() {
     try {
-        const response = await fetch(`${API_URL}/planos`);
+        const response = await fetch(`${API_URL}/plano/listarByCNPJ`, {
+            headers: obterHeadersAutenticados()
+        });
         const data = await response.json();
 
         if (!response.ok) {
@@ -50,6 +58,8 @@ async function carregarPlanos() {
 
     } catch (error) {
         console.error('Erro ao carregar planos:', error);
+        selectPlano.replaceChildren(new Option('Não foi possível carregar planos', ''));
+        selectPlano.disabled = true;
     }
 }
 
@@ -69,17 +79,18 @@ document.getElementById('btnCadastrarPaciente').addEventListener('click', async 
         return;
     }
 
-    const clinica_cnpj = obterClinicaCnpj();
-
-    if (!clinica_cnpj) {
-        alert('Não foi possível identificar a clínica. Faça login novamente.');
+    let headers;
+    try {
+        headers = obterHeadersAutenticados();
+    } catch (error) {
+        alert(error.message);
         return;
     }
 
     try {
         const response = await fetch(`${API_URL}/pacientes/register`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { ...headers, 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 nome,
                 cpf,
@@ -87,8 +98,7 @@ document.getElementById('btnCadastrarPaciente').addEventListener('click', async 
                 email,
                 complemento,
                 tag_idtag,
-                plano_idplano,
-                clinica_cnpj
+                plano_idplano
             })
         });
 

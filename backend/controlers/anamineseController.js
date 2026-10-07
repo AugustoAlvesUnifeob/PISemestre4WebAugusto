@@ -1,12 +1,22 @@
 //requerer o model da Anaminese
 const Anaminese = require('../models/Anaminese')
+const Paciente = require('../models/Paciente')
 
 module.exports = class anamineseController{
     static async register(req, res){
         const {queixas, historicoatual, doencaspreexistentes, medicamentos, alergias, cirurgiasanteriores, historicofamiliar, pacientes_idpacientes} = req.body
 
-        //criar nova Anaminese
         try{
+            const paciente = await Paciente.findOne({
+                where: {
+                    idpacientes: pacientes_idpacientes,
+                    clinica_cnpj: req.user.clinica_cnpj
+                }
+            })
+            if(!paciente){
+                return res.status(404).json({message: 'Paciente não encontrado'})
+            }
+
             await Anaminese.create({
                 queixas: queixas,
                 historicoatual: historicoatual,
@@ -24,35 +34,37 @@ module.exports = class anamineseController{
     }
 
     static async update(req, res){
-        const {idanaminese} = req.params //id do Anaminese na url
-        const {queixas, historicoatual, doencaspreexistentes, medicamentos, alergias, cirurgiasanteriores, historicofamiliar, pacientes_idpacientes} = req.body
+        const {idanaminese} = req.params
+        const {queixas, historicoatual, doencaspreexistentes, medicamentos, alergias, cirurgiasanteriores, historicofamiliar} = req.body
 
-        //atualizar Anaminese
         try{
-            //procurar Anaminese pelo id
-            const Exists = await Anaminese.findByPk(idanaminese)
-            if(!Exists){
+            const anaminese = await Anaminese.findByPk(idanaminese)
+            if(!anaminese){
                 return res.status(404).json({message: "Anaminese não encontrado"})
             }
 
-            await Anaminese.update(
-                {
-                    queixas: queixas,
-                    historicoatual: historicoatual,
-                    doencaspreexistentes: doencaspreexistentes,
-                    medicamentos: medicamentos,
-                    alergias: alergias,
-                    cirurgiasanteriores: cirurgiasanteriores,
-                    historicofamiliar: historicofamiliar,
-                    pacientes_idpacientes: pacientes_idpacientes
-                },
-                {
-                    where: {idanaminese: idanaminese}
+            const paciente = await Paciente.findOne({
+                where: {
+                    idpacientes: anaminese.pacientes_idpacientes,
+                    clinica_cnpj: req.user.clinica_cnpj
                 }
-            )
+            })
+            if(!paciente){
+                return res.status(404).json({message: 'Anamnese não encontrada'})
+            }
+
+            await anaminese.update({
+                queixas,
+                historicoatual,
+                doencaspreexistentes,
+                medicamentos,
+                alergias,
+                cirurgiasanteriores,
+                historicofamiliar
+            })
             res.status(200).json({message:'Anaminese alterado com sucesso'})
         }catch(error){
-            res.status(500).json({message: error})
+            res.status(500).json({message: error.message})
         }
     }
 
@@ -92,17 +104,42 @@ module.exports = class anamineseController{
         }
     }
 
-    static async listarOne(req, res){
-        const idanaminese = req.params
+    static async listarPorPaciente(req, res){
+        const {pacientes_idpacientes} = req.params
 
         try{
-            const anamineses = await Anaminese.findOne({where: idanaminese})
-            if(!anamineses){
-                anamineses = "Anaminese não cadastrada"
+            const paciente = await Paciente.findOne({
+                where: {
+                    idpacientes: pacientes_idpacientes,
+                    clinica_cnpj: req.user.clinica_cnpj
+                }
+            })
+            if(!paciente){
+                return res.status(404).json({message: 'Paciente não encontrado'})
             }
+
+            const anaminese = await Anaminese.findOne({
+                where: {pacientes_idpacientes}
+            })
+            return res.status(200).json({anaminese})
         }
         catch(error){
-            res.status(500).json({error: error})
+            return res.status(500).json({message: error.message})
+        }
+    }
+
+    static async listarOne(req, res){
+        const {idanaminese} = req.params
+
+        try{
+            const anaminese = await Anaminese.findByPk(idanaminese)
+            if(!anaminese){
+                return res.status(404).json({message: 'Anamnese não cadastrada'})
+            }
+            return res.status(200).json({anaminese})
+        }
+        catch(error){
+            return res.status(500).json({message: error.message})
         }
     }
 }

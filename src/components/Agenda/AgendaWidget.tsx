@@ -3,7 +3,7 @@ import FullCalendar from '@fullcalendar/react'
 import ptBrLocale from '@fullcalendar/core/locales/pt-br'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
-import NovaConsultaModal from '.Agenda/NovaConsultaModal'
+import NovaConsultaModal from './NovaConsultaModal'
 import DetalhesConsultaModal from './DetalhesConsultaModal'
 
 export function Agenda(){

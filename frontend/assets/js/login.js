@@ -22,8 +22,11 @@ document.getElementById('btnEntrar').addEventListener('click', async (event) => 
             throw new Error(data.message || 'Erro ao realizar login.');
         }
 
-        // Salva as informações do usuário logado na sessão do navegador pra depois(??)
-        localStorage.setItem('usuarioLogado', JSON.stringify(data.user));
+        if (!data.token) {
+            throw new Error('A API não retornou um token de acesso.');
+        }
+
+        localStorage.setItem('@App:token', data.token);
 
         alert('Login efetuado com sucesso!');
         

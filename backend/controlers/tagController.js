@@ -3,7 +3,8 @@ const Tag = require('../models/Tag')
 
 module.exports = class TagController{
     static async register(req, res){
-        const {descricao, clinica_cnpj} = req.body
+        const {descricao} = req.body
+        const clinica_cnpj = req.user.clinica_cnpj
 
         //criar nova tag
         try{

@@ -1,11 +1,11 @@
 const API_URL = 'http://localhost:5000';
 
-// Função para pegar o CNPJ
-function obterClinicaCnpj() {
-    const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
-    return usuarioLogado ? 
-    usuarioLogado.clinica_cnpj : 
-    null;
+function obterHeadersAutenticados() {
+    const token = localStorage.getItem('@App:token');
+    if (!token) {
+        throw new Error('Sessão expirada. Faça login novamente.');
+    }
+    return { Authorization: `Bearer ${token}` };
 }
 
 // Cadastro Tags
@@ -20,22 +20,16 @@ document.getElementById('btnCadastrarTag').addEventListener('click', async (even
         return;
     }
      
-    const clinica_cnpj = obterClinicaCnpj();
-
-    // Clinica vazia ou diferente = retorna alerta
-    if (!clinica_cnpj) {
-        alert('Não foi possível identificar a clínica. Faça login novamente.');
-        return;
-    }
-
     // Requisição api
     try {
-        const response = await fetch(`${API_URL}/tags/register`, {
+        const response = await fetch(`${API_URL}/tag/register`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                ...obterHeadersAutenticados(),
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
-                nome: nome,
-                clinica_cnpj
+                descricao: nome
             })
         });
 

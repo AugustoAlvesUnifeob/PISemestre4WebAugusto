@@ -5,6 +5,14 @@ const campoPesquisa = document.getElementById('pesquisarPaciente');
 
 let pacientes = [];
 
+function obterHeadersAutenticados() {
+    const token = localStorage.getItem('@App:token');
+    if (!token) {
+        throw new Error('Sessão expirada. Faça login novamente.');
+    }
+    return { Authorization: `Bearer ${token}` };
+}
+
 // Renderiza a lista de pacientes na tela, aplicando o filtro de pesquisa
 function renderizarPacientes(filtro = '') {
     listaPacientes.innerHTML = '';
@@ -36,7 +44,9 @@ function renderizarPacientes(filtro = '') {
 // Busca os pacientes cadastrados na API
 async function carregarPacientes() {
     try {
-        const response = await fetch(`${API_URL}/pacientes`);
+        const response = await fetch(`${API_URL}/pacientes/listarByCNPJ`, {
+            headers: obterHeadersAutenticados()
+        });
         const data = await response.json();
 
         if (!response.ok) {

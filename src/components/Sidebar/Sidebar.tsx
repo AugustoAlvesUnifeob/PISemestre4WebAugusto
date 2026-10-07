@@ -97,6 +97,18 @@ export function Sidebar({
                         Planos
                         </li>
 
+                        <li className="cursor-pointer rounded-full px-3 py-2 text-[#2d2d2d] transition hover:bg-[#edf4f0] md:mb-4" onClick={() => onNavigate('inicio')}
+                        >
+                        Documentos
+                        </li>
+
+                        <li
+                        className="cursor-pointer rounded-full px-3 py-2 text-[#2d2d2d] transition hover:bg-[#edf4f0] md:mt-8"
+                        onClick={logout}
+                        >
+                        Sair
+                        </li>
+
 
                     </ul>
                 </nav>

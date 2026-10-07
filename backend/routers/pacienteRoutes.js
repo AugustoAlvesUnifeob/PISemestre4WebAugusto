@@ -21,8 +21,8 @@ route.post('/delete/:idpaciente', verifyToken, PacienteController.delete);
 //listar todos
 route.get('/', verifyToken, PacienteController.listAll)
 
-route.get('/:idpaciente', verifyToken, PacienteController.listarOne)
-
 route.get('/listarByCNPJ', verifyToken, PacienteController.listarByCNPJ)
+
+route.get('/:idpaciente', verifyToken, PacienteController.listarOne)
 
 module.exports = route

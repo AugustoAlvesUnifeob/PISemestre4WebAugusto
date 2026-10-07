@@ -20,8 +20,8 @@ route.post('/delete/:iddoutor', verifyToken, DoutorController.delete);
 //listar todos
 route.get('/', verifyToken, DoutorController.listAll)
 
-route.get('/:iddoutor', verifyToken, DoutorController.listarOne)
-
 route.get('/listarByCNPJ', verifyToken, DoutorController.listarByCNPJ)
+
+route.get('/:iddoutor', verifyToken, DoutorController.listarOne)
 
 module.exports = route

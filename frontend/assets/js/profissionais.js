@@ -5,6 +5,14 @@ const campoPesquisa = document.getElementById('pesquisarProfissional');
 
 let profissionais = [];
 
+function obterHeadersAutenticados() {
+    const token = localStorage.getItem('@App:token');
+    if (!token) {
+        throw new Error('Sessão expirada. Faça login novamente.');
+    }
+    return { Authorization: `Bearer ${token}` };
+}
+
 function renderizarProfissionais(filtro = '') {
 
     listaProfissionais.innerHTML = '';
@@ -47,7 +55,9 @@ async function carregarProfissionais() {
 
     try {
 
-        const response = await fetch(`${API_URL}/doutores`);
+        const response = await fetch(`${API_URL}/doutores/listarByCNPJ`, {
+            headers: obterHeadersAutenticados()
+        });
 
         const data = await response.json();
 

@@ -11,15 +11,17 @@ const verifyToken = require('../helpers/verify-token.js')
 //register
 route.post('/register', verifyToken, anamineseController.register)
 
-route.post('/update/:idtag', verifyToken, anamineseController.update)
+route.post('/update/:idanaminese', verifyToken, anamineseController.update)
 
-route.post('/delete/:idtag', verifyToken, anamineseController.delete)
+route.post('/delete/:idanaminese', verifyToken, anamineseController.delete)
 
 //listar todos
 route.get('/', verifyToken, anamineseController.listAll)
 
-route.get('/:idtag', verifyToken, anamineseController.listarOne)
+route.get('/paciente/:pacientes_idpacientes', verifyToken, anamineseController.listarPorPaciente)
 
 route.get('/listarByCNPJ', verifyToken, anamineseController.listarByCNPJ)
+
+route.get('/:idanaminese', verifyToken, anamineseController.listarOne)
 
 module.exports = route

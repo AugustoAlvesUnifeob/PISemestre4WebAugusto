@@ -3,7 +3,8 @@ const Plano = require('../models/Plano')
 
 module.exports = class PlanoController{
     static async register(req, res){
-        const {descricao, aplicadesconto, valordesconto, exonera, clinica_cnpj} = req.body
+        const {descricao, aplicadesconto, valordesconto, exonera} = req.body
+        const clinica_cnpj = req.user.clinica_cnpj
 
         //criar novo plano
         try{

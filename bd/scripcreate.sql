@@ -88,21 +88,13 @@ CREATE TABLE `pacientes` (
     `telefone` VARCHAR(45),
     `email` VARCHAR(45) NOT NULL,
     `complemento` VARCHAR(45) NULL,
-    `tag_idtag` INT NOT NULL,
     `plano_idplano` INT NOT NULL,
     `clinica_cnpj` VARCHAR(14) NOT NULL,
 
     PRIMARY KEY (`idpacientes`),
 
-    INDEX `fk_pacientes_tag_idx` (`tag_idtag`),
     INDEX `fk_pacientes_plano1_idx` (`plano_idplano`),
     INDEX `fk_pacientes_clinica1_idx` (`clinica_cnpj`),
-
-    CONSTRAINT `fk_pacientes_tag`
-        FOREIGN KEY (`tag_idtag`)
-        REFERENCES `tag` (`idtag`)
-        ON DELETE NO ACTION
-        ON UPDATE NO ACTION,
 
     CONSTRAINT `fk_pacientes_plano1`
         FOREIGN KEY (`plano_idplano`)
@@ -194,6 +186,51 @@ CREATE TABLE `agenda` (
     CONSTRAINT `fk_agenda_clinica1`
         FOREIGN KEY (`clinica_cnpj`)
         REFERENCES `clinica` (`cnpj`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION
+) ENGINE = InnoDB;
+
+-- -----------------------------------------------------
+-- Table `easyclinic`.`anaminese`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `easyclinic`.`anaminese` (
+  `idanaminese` INT NOT NULL AUTO_INCREMENT,
+  `queixas` VARCHAR(255) NULL,
+  `historicoatual` VARCHAR(255) NULL,
+  `doencaspreexistentes` VARCHAR(255) NULL,
+  `medicamentos` VARCHAR(255) NULL,
+  `alergias` VARCHAR(255) NULL,
+  `cirurgiasanteriores` VARCHAR(255) NULL,
+  `historicofamiliar` VARCHAR(255) NULL,
+  `pacientes_idpacientes` INT NOT NULL,
+  PRIMARY KEY (`idanaminese`),
+  INDEX `fk_anaminese_pacientes1_idx` (`pacientes_idpacientes` ASC),
+  CONSTRAINT `fk_anaminese_pacientes1`
+    FOREIGN KEY (`pacientes_idpacientes`)
+    REFERENCES `easyclinic`.`pacientes` (`idpacientes`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+CREATE TABLE `tagpaciente` (
+    `id` INT NOT NULL auto_increment,
+    `tag_idtag` int NOT NULL,
+    `pacientes_idpacientes` INT NOT NULL,
+
+    PRIMARY KEY (`id`),
+
+    INDEX `fk_tagpaciente_tag1_idx` (`tag_idtag`),
+    INDEX `fk_agenda_pacientes1_idx` (`pacientes_idpacientes`),
+
+    CONSTRAINT `fk_tagpaciente_tag1_idx`
+        FOREIGN KEY (`tag_idtag`)
+        REFERENCES `tag` (`idtag`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION,
+
+    CONSTRAINT `fk_tagpacientes_pacientes1`
+        FOREIGN KEY (`pacientes_idpacientes`)
+        REFERENCES `pacientes` (`idpacientes`)
         ON DELETE NO ACTION
         ON UPDATE NO ACTION
 ) ENGINE = InnoDB;
