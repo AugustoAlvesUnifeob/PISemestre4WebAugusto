@@ -1,4 +1,5 @@
 import { useAuth } from '../../context/AuthContext'
+import { useState } from 'react'
 
 type Page =
   | 'login'
@@ -17,8 +18,17 @@ type Page =
   | 'editarProfissional'
   | 'editarTag'
   | 'editarPlano'
+  | 'receita'
+  | 'atestado'
+  | 'laudo'
     | 'editarUsuario'
 ;
+
+const documentLinks: { label: string; page: 'receita' | 'atestado' | 'laudo' }[] = [
+    { label: 'Receita', page: 'receita' },
+    { label: 'Atestado', page: 'atestado' },
+    { label: 'Laudo', page: 'laudo' },
+]
 
 export function Sidebar({
         active,
@@ -30,6 +40,7 @@ export function Sidebar({
         children: React.ReactNode
     }) {
         const { user, logout } = useAuth()
+        const [documentsOpen, setDocumentsOpen] = useState(false)
 
         return (
 
@@ -103,9 +114,55 @@ export function Sidebar({
                         Planos
                         </li>
 
-                        <li className="cursor-pointer rounded-full px-3 py-2 text-[#2d2d2d] transition hover:bg-[#edf4f0] md:mb-4" onClick={() => onNavigate('inicio')}
-                        >
-                        Documentos
+                        <li className="relative md:mb-4">
+                            <button
+                                type="button"
+                                aria-expanded={documentsOpen}
+                                aria-controls="sidebar-documents-menu"
+                                onClick={() => setDocumentsOpen(!documentsOpen)}
+                                className={`flex w-full cursor-pointer items-center justify-between rounded-full px-3 py-2 text-left transition hover:bg-[#edf4f0] ${
+                                    active === 'receita' || active === 'atestado' || active === 'laudo'
+                                        ? 'bg-[#edf4f0] font-bold text-[#27463b]'
+                                        : 'text-[#2d2d2d]'
+                                }`}
+                            >
+                                <span>Documentos</span>
+                                <svg
+                                    className={`ml-2 h-4 w-4 transition-transform ${documentsOpen ? 'rotate-180' : ''}`}
+                                    aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 9-7 7-7-7" />
+                                </svg>
+                            </button>
+                            {documentsOpen && (
+                                <ul
+                                    id="sidebar-documents-menu"
+                                    className="absolute left-0 top-full z-10 mt-1 min-w-44 rounded-xl border border-[#dfe7e2] bg-white p-2 text-sm shadow-lg"
+                                >
+                                    {documentLinks.map((documentType) => (
+                                        <li key={documentType.page}>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setDocumentsOpen(false)
+                                                    onNavigate(documentType.page)
+                                                }}
+                                                className={`w-full rounded-lg px-3 py-2 text-left transition hover:bg-[#edf4f0] ${
+                                                    active === documentType.page
+                                                        ? 'font-bold text-[#27463b]'
+                                                        : 'text-[#2d2d2d]'
+                                                }`}
+                                            >
+                                                {documentType.label}
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </li>
 
                         <li

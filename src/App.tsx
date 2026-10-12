@@ -26,6 +26,9 @@ type Page =
   | 'editarProfissional'
   | 'editarTag'
   | 'editarPlano'
+  | 'receita'
+  | 'atestado'
+  | 'laudo'
   | 'editarUsuario'
 
 type RecordItem = {
@@ -87,6 +90,9 @@ const protectedPages: Page[] = [
   'editarProfissional',
   'editarTag',
   'editarPlano',
+  'receita',
+  'atestado',
+  'laudo',
   'editarUsuario'
 ]
 
@@ -166,6 +172,15 @@ function App() {
       )}   
       {visiblePage === 'editarPlano' && editingItem && (
         <PlanoForm onNavigate={goTo} onNotice={setNotice} notice={notice} item={editingItem as PlanoItem} />
+      )}
+      {visiblePage === 'receita' && (
+        <ReceitaForm onNavigate={goTo} onNotice={setNotice} notice={notice} />
+      )}
+      {visiblePage === 'atestado' && (
+        <AtestadoForm onNavigate={goTo} onNotice={setNotice} notice={notice} />
+      )}
+      {visiblePage === 'laudo' && (
+        <LaudoForm onNavigate={goTo} onNotice={setNotice} notice={notice} />
       )}
     </>
   )
@@ -461,6 +476,20 @@ function EntityField({
             </label>
           ))}
         </div>
+      </div>
+    )
+  }
+
+  if (field.type === 'textarea') {
+    return (
+      <div className="space-y-1">
+        <label className="block text-sm text-gray-600">{field.label}</label>
+        <textarea
+          className="w-full resize-y rounded-lg border border-gray-300 px-3 py-3 text-sm focus:border-[#4f7161] focus:outline-none focus:ring-2 focus:ring-[#4f7161]/20"
+          rows={4}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
       </div>
     )
   }
@@ -1210,11 +1239,13 @@ function PlanoForm({ onNavigate, onNotice, notice, item }: FormProps & { item?: 
   )
 }
 
-type EntityFieldConfig =
-  | {
+type EntityFieldConfig = {
     label: string
     name: string
-    type?: 'text' | 'email' | 'password'
+    optional?: boolean
+  } & (
+  | {
+    type?: 'text' | 'email' | 'password' | 'number' | 'textarea'
   }
   | {
     label: string
@@ -1234,6 +1265,7 @@ type EntityFieldConfig =
     type: 'radio'
     options: Array<{ label: string; value: string }>
   }
+  )
 
 function PatientForm({ onNavigate, onNotice, notice, item }: FormProps & { item?: RecordItem }) {
   const [tags, setTags] = useState<SelectOption[]>([])
@@ -1290,7 +1322,7 @@ function PatientForm({ onNavigate, onNotice, notice, item }: FormProps & { item?
         { label: 'CPF', name: 'cpf' },
         { label: 'Telefone', name: 'telefone' },
         { label: 'E-mail', name: 'email', type: 'email' },
-        { label: 'Complemento', name: 'complemento' },
+        { label: 'Complemento', name: 'complemento', type: 'textarea' },
         { label: 'Tags', name: 'tag_ids', type: 'multiselect', options: tags },
         {
           label: 'Plano',
@@ -1342,11 +1374,169 @@ function TagForm({ onNavigate, onNotice, notice, item }: FormProps & { item?: Ta
   )
 }
 
+//documentos
+
+type DocumentPatient = { idpacientes: number; nome: string }
+type DocumentDoctor = { iddoutor: number; nome: string; especialidade?: string }
+
+function useDocumentOptions(onNotice: FormProps['onNotice']) {
+  const [patients, setPatients] = useState<SelectOption[]>([])
+  const [doctors, setDoctors] = useState<SelectOption[]>([])
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadOptions() {
+      try {
+        const [patientsResponse, doctorsResponse] = await Promise.all([
+          fetchWithToken(`${API_URL}/pacientes/listarByCNPJ`),
+          fetchWithToken(`${API_URL}/doutores/listarByCNPJ`),
+        ])
+        const [patientsData, doctorsData] = await Promise.all([
+          readResponse(patientsResponse),
+          readResponse(doctorsResponse),
+        ])
+
+        if (!patientsResponse.ok) throw new Error(messageFrom(patientsData))
+        if (!doctorsResponse.ok) throw new Error(messageFrom(doctorsData))
+        if (!Array.isArray(patientsData.pacientes) || !Array.isArray(doctorsData.doutores)) {
+          throw new Error('A resposta da lista de pacientes ou doutores é inválida.')
+        }
+
+        if (isMounted) {
+          setPatients(
+            (patientsData.pacientes as DocumentPatient[]).map((patient) => ({
+              label: patient.nome,
+              value: String(patient.idpacientes),
+            })),
+          )
+          setDoctors(
+            (doctorsData.doutores as DocumentDoctor[]).map((doctor) => ({
+              label: doctor.especialidade
+                ? `${doctor.nome} — ${doctor.especialidade}`
+                : doctor.nome,
+              value: String(doctor.iddoutor),
+            })),
+          )
+        }
+      } catch (error) {
+        if (isMounted) {
+          onNotice(
+            error instanceof Error
+              ? error.message
+              : 'Não foi possível carregar pacientes e doutores.',
+          )
+        }
+      }
+    }
+
+    void loadOptions()
+    return () => {
+      isMounted = false
+    }
+  }, [onNotice])
+
+  return { patients, doctors }
+}
+
+function DocumentForm({
+  title,
+  active,
+  endpoint,
+  extraFields,
+  onNavigate,
+  onNotice,
+  notice,
+}: FormProps & {
+  title: string
+  active: Extract<Page, 'receita' | 'atestado' | 'laudo'>
+  endpoint: string
+  extraFields: EntityFieldConfig[]
+}) {
+  const { patients, doctors } = useDocumentOptions(onNotice)
+
+  return (
+    <EntityForm
+      title={title}
+      back="inicio"
+      active={active}
+      endpoint={endpoint}
+      downloadPdf
+      onNavigate={onNavigate}
+      onNotice={onNotice}
+      notice={notice}
+      submitLabel="Gerar"
+      fields={[
+        {
+          label: 'Paciente',
+          name: 'idpaciente',
+          type: 'select',
+          options: [
+            { label: 'Selecione um paciente', value: '' },
+            ...patients,
+          ],
+        },
+        {
+          label: 'Doutor',
+          name: 'iddoutor',
+          type: 'select',
+          options: [
+            { label: 'Selecione um doutor', value: '' },
+            ...doctors,
+          ],
+        },
+        ...extraFields,
+      ]}
+    />
+  )
+}
+
+function ReceitaForm(props: FormProps) {
+  return (
+    <DocumentForm
+      {...props}
+      title="Gerar Receita"
+      active="receita"
+      endpoint="/documentos/receita"
+      extraFields={[{ label: 'Prescrição', name: 'prescricao', type: 'textarea' }]}
+    />
+  )
+}
+
+function AtestadoForm(props: FormProps) {
+  return (
+    <DocumentForm
+      {...props}
+      title="Gerar Atestado"
+      active="atestado"
+      endpoint="/documentos/atestado"
+      extraFields={[
+        { label: 'Dias', name: 'dias', type: 'number' },
+        { label: 'Complemento', name: 'complemento', type: 'textarea', optional: true },
+      ]}
+    />
+  )
+}
+
+function LaudoForm(props: FormProps) {
+  return (
+    <DocumentForm
+      {...props}
+      title="Gerar Laudo"
+      active="laudo"
+      endpoint="/documentos/laudo"
+      extraFields={[{ label: 'Laudo', name: 'laudo', type: 'textarea' }]}
+    />
+  )
+}
+
 function EntityForm({
   title,
   back,
+  active,
   fields,
   endpoint,
+  downloadPdf = false,
   onNavigate,
   onNotice,
   notice,
@@ -1355,8 +1545,10 @@ function EntityForm({
 }: {
   title: string
   back: Page
+  active?: Page
   fields: EntityFieldConfig[]
   endpoint: string
+  downloadPdf?: boolean
   onNavigate: (page: Page) => void
   onNotice: (notice: string) => void
   notice: string
@@ -1369,7 +1561,7 @@ function EntityForm({
 
   async function submit(event: FormEvent) {
     event.preventDefault()
-    if (fields.some((field) => field.type !== 'multiselect' && !values[field.name]))
+    if (fields.some((field) => !field.optional && field.type !== 'multiselect' && !values[field.name]))
       return onNotice('Por favor, preencha todos os campos obrigatórios!')
 
     const payload = Object.fromEntries(
@@ -1379,15 +1571,21 @@ function EntityForm({
           ? values[field.name].split(',').filter(Boolean).map(Number)
           : field.type === 'radio'
             ? values[field.name] === 'true' ? 1 : 0
-          : values[field.name],
+            : field.type === 'number' || field.type === 'select'
+              ? Number(values[field.name])
+              : values[field.name],
       ]),
     )
 
     try {
-      const response = await post(endpoint, payload)
-
-      if (!response.ok) throw new Error(messageFrom(response.data))
-      onNotice('Cadastro realizado com sucesso!')
+      if (downloadPdf) {
+        await downloadDocumentPdf(endpoint, payload)
+        onNotice('PDF gerado e baixado com sucesso!')
+      } else {
+        const response = await post(endpoint, payload)
+        if (!response.ok) throw new Error(messageFrom(response.data))
+        onNotice('Cadastro realizado com sucesso!')
+      }
       onNavigate(back)
     } catch (error) {
       onNotice(
@@ -1397,7 +1595,7 @@ function EntityForm({
   }
 
   return (
-    <Sidebar active={back} onNavigate={onNavigate}>
+    <Sidebar active={active ?? back} onNavigate={onNavigate}>
       <div className="mx-auto max-w-2xl rounded-[10px] bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.1)] md:p-8">
         <h1 className="mb-7 text-2xl font-bold text-[#4f7161]">{title}</h1>
         {notice && <p className="notice">{notice}</p>}
@@ -1442,6 +1640,35 @@ async function post(path: string, body: object) {
     body: JSON.stringify(body),
   })
   return { ok: response.ok, data: await readResponse(response) }
+}
+async function downloadDocumentPdf(path: string, body: object) {
+  const response = await fetchWithToken(`${API_URL}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...tokenHeader(),
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    const data = await readResponse(response)
+    throw new Error(messageFrom(data))
+  }
+  if (!response.headers.get('Content-Type')?.includes('application/pdf')) {
+    throw new Error('O servidor não retornou um arquivo PDF válido.')
+  }
+
+  const blob = await response.blob()
+  const filename = `${path.split('/').filter(Boolean).pop() || 'documento'}.pdf`
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.append(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 function tokenHeader(): Record<string, string> {
   const token = localStorage.getItem('@App:token')

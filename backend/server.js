@@ -24,6 +24,7 @@ const planoRoutes = require('./routers/planoRoutes.js')
 const tagRoutes = require('./routers/tagRoutes.js')
 const agendaRoutes = require('./routers/agendaRoutes.js')
 const anamineseRoutes = require('./routers/anamineseRoutes.js')
+const documentRoutes = require('./routers/documentRoutes.js')
 
 //configurando JSON response
 api.use(express.json())
@@ -40,6 +41,7 @@ api.use('/tag', tagRoutes)
 api.use('/plano', planoRoutes)
 api.use('/agenda', agendaRoutes)
 api.use('/anaminese', anamineseRoutes)
+api.use('/documentos', documentRoutes)
 
 //start api
 conn.sync()
