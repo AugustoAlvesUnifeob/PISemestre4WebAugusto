@@ -13,6 +13,7 @@ type Page =
   | 'login'
   | 'cadastro'
   | 'inicio'
+  | 'agendamentos'
   | 'pacientes'
   | 'profissionais'
   | 'tags'
@@ -73,6 +74,7 @@ type SelectOption = { label: string; value: string }
 const API_URL = 'http://localhost:5000'
 const protectedPages: Page[] = [
   'inicio',
+  'agendamentos',
   'pacientes',
   'profissionais',
   'tags',
@@ -123,6 +125,7 @@ function App() {
         <Register onNavigate={goTo} onNotice={setNotice} notice={notice} />
       )}
       {visiblePage === 'inicio' && <Dashboard onNavigate={goTo} />}
+      {visiblePage === 'agendamentos' && <AppointmentsPage onNavigate={goTo} />}
       {visiblePage === 'editarUsuario' && (
         <EditUserPage onNavigate={goTo} />
       )}
@@ -322,7 +325,7 @@ function AuthLayout({
       <div className="flex min-h-[220px] w-full items-center justify-center bg-[#4f7161] md:min-h-screen md:w-[45%]">
         <div className="text-center text-white">
           <h1 className="mb-4 text-8xl font-bold">EasyClinic</h1>
-          <p className="text-lg">Sistema de Gestão para Clínicas</p>
+          <p className="text-lg">Sistema Simples de Gestão para Clínicas</p>
           <br></br>
           <img src={Assets.Imagens.people} alt='people' />
         </div>
@@ -467,8 +470,6 @@ function EntityField({
 }
 
 function Dashboard({ onNavigate }: { onNavigate: (page: Page) => void }) {
-  const indicators = ['Consultas', 'Pacientes', 'Profissionais']
-
   return (
     <Sidebar active="inicio" onNavigate={onNavigate}>
       <div className="-m-6 min-h-screen bg-[#a4c2aa] p-6 md:-m-10 md:p-10">
@@ -482,8 +483,8 @@ function Dashboard({ onNavigate }: { onNavigate: (page: Page) => void }) {
             <Agenda />
           </div>
         </section>
-
-        <section>
+        
+        {/*<section>
           <h2 className="mb-4 rounded-lg bg-[#5f846e] px-4 py-3 text-sm font-bold text-white">
             MOVIMENTO
           </h2>
@@ -502,6 +503,22 @@ function Dashboard({ onNavigate }: { onNavigate: (page: Page) => void }) {
                 </div>
               </article>
             ))}
+          </div>
+        </section>*/}
+
+      </div>
+    </Sidebar>
+  )
+}
+
+function AppointmentsPage({ onNavigate }: { onNavigate: (page: Page) => void }) {
+  return (
+    <Sidebar active="agendamentos" onNavigate={onNavigate}>
+      <div className="-m-6 min-h-screen bg-[#a4c2aa] p-6 md:-m-10 md:p-10">
+        <h1 className="mb-5 text-2xl font-bold text-white">AGENDAMENTOS</h1>
+        <section>
+          <div className="rounded-lg bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
+            <Agenda permitirNavegacao />
           </div>
         </section>
       </div>
@@ -711,7 +728,6 @@ function RecordsPage({
     setAnamnesePatient(item)
   }
 
-  // JSX permite renderização condicional usando expressões JavaScript.
   return (
     <Sidebar active={kind} onNavigate={onNavigate}>
       {notice && (
@@ -1352,6 +1368,8 @@ function EntityForm({
         field.name,
         field.type === 'multiselect'
           ? values[field.name].split(',').filter(Boolean).map(Number)
+          : field.type === 'radio'
+            ? values[field.name] === 'true' ? 1 : 0
           : values[field.name],
       ]),
     )

@@ -1,18 +1,30 @@
 //requerer o model do plano
 const Plano = require('../models/Plano')
 
+function toTinyInt(value){
+    if(value === true || value === 1 || value === '1' || value === 'true') return 1
+    if(value === false || value === 0 || value === '0' || value === 'false') return 0
+    return null
+}
+
 module.exports = class PlanoController{
     static async register(req, res){
         const {descricao, aplicadesconto, valordesconto, exonera} = req.body
         const clinica_cnpj = req.user.clinica_cnpj
+        const aplicaDescontoInt = toTinyInt(aplicadesconto)
+        const exoneraInt = toTinyInt(exonera)
+
+        if(aplicaDescontoInt === null || exoneraInt === null){
+            return res.status(400).json({message: 'Desconto e exoneração devem ser Sim ou Não'})
+        }
 
         //criar novo plano
         try{
             await Plano.create({
                 descricao: descricao,
-                aplicadesconto: aplicadesconto,
+                aplicadesconto: aplicaDescontoInt,
                 valordesconto: valordesconto,
-                exonera: exonera,
+                exonera: exoneraInt,
                 clinica_cnpj: clinica_cnpj
             })
             res.status(200).json({message:'Plano Cadastrado com sucesso'})
@@ -24,6 +36,12 @@ module.exports = class PlanoController{
     static async update(req, res){
         const {idplano} = req.params //id do plano na url
         const {descricao, aplicadesconto, valordesconto, exonera, clinica_cnpj} = req.body
+        const aplicaDescontoInt = toTinyInt(aplicadesconto)
+        const exoneraInt = toTinyInt(exonera)
+
+        if(aplicaDescontoInt === null || exoneraInt === null){
+            return res.status(400).json({message: 'Desconto e exoneração devem ser Sim ou Não'})
+        }
 
         //atualizar plano
         try{
@@ -36,9 +54,9 @@ module.exports = class PlanoController{
             await Plano.update(
                 {
                     descricao: descricao,
-                    aplicadesconto: aplicadesconto,
+                    aplicadesconto: aplicaDescontoInt,
                     valordesconto: valordesconto,
-                    exonera: exonera,
+                    exonera: exoneraInt,
                     clinica_cnpj: clinica_cnpj
                 },
                 {

@@ -49,3 +49,57 @@ body {
 .cadastrar:hover {
     background-color: #3f5c4f;
 }
+
+.agenda-calendar {
+  --fc-border-color: #e2e9e4;
+  --fc-page-bg-color: #ffffff;
+  --fc-neutral-bg-color: #f6f8f6;
+  --fc-today-bg-color: #eef6ef;
+  --fc-event-bg-color: #4f7161;
+  --fc-event-border-color: #3f5c4f;
+  --fc-event-text-color: #ffffff;
+  color: #35463b;
+}
+
+.agenda-calendar .fc-scrollgrid {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.agenda-calendar .fc-col-header-cell {
+  background: #edf4ef;
+  font-weight: 600;
+}
+
+.agenda-calendar .fc-col-header-cell-cushion {
+  display: block;
+  padding: 10px 4px;
+  color: #365844;
+  text-decoration: none;
+}
+
+.agenda-calendar .fc-timegrid-axis,
+.agenda-calendar .fc-timegrid-slot-label {
+  background: #f8faf8;
+  color: #738078;
+  font-size: 0.75rem;
+}
+
+.agenda-calendar .fc-timegrid-slot-minor {
+  border-top-style: dotted;
+}
+
+.agenda-calendar .fc-timegrid-event {
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(36, 66, 47, 0.16);
+}
+
+.agenda-calendar .fc-timegrid-event .fc-event-main {
+  padding: 3px 5px;
+}
+
+@media (max-width: 640px) {
+  .agenda-calendar .fc {
+    min-width: 760px;
+  }
+}

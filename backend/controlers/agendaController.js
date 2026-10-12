@@ -30,4 +30,23 @@ module.exports = class AgendaController {
             res.status(500).json({ error: error.message })
         }
     }
+
+    static async delete(req, res) {
+        const { idagenda } = req.params
+        const clinica_cnpj = req.user.clinica_cnpj
+
+        try {
+            const agendamento = await Agenda.findOne({
+                where: { idagenda, clinica_cnpj }
+            })
+            if (!agendamento) {
+                return res.status(404).json({ message: 'Agendamento não encontrado' })
+            }
+
+            await agendamento.destroy()
+            return res.status(200).json({ message: 'Agendamento apagado com sucesso' })
+        } catch (error) {
+            return res.status(500).json({ message: error.message })
+        }
+    }
 }

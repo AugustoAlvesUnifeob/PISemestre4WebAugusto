@@ -4,6 +4,7 @@ type Page =
   | 'login'
   | 'cadastro'
   | 'inicio'
+    | 'agendamentos'
   | 'pacientes'
   | 'profissionais'
   | 'tags'
@@ -65,7 +66,12 @@ export function Sidebar({
                         Início
                         </li>
 
-                        <li className="cursor-pointer rounded-full px-3 py-2 text-[#2d2d2d] transition hover:bg-[#edf4f0] md:mb-4" onClick={() => onNavigate('inicio')}>Agendamentos</li>
+                        <li
+                        className={`cursor-pointer rounded-full px-3 py-2 transition hover:bg-[#edf4f0] md:mb-4 ${active === 'agendamentos' ? 'bg-[#edf4f0] font-bold text-[#27463b]' : 'text-[#2d2d2d]'}`}
+                        onClick={() => onNavigate('agendamentos')}
+                        >
+                        Agendamentos
+                        </li>
                         
                         <li
                         className={`cursor-pointer rounded-full px-3 py-2 transition hover:bg-[#edf4f0] md:mb-4 ${active === 'pacientes' ? 'bg-[#edf4f0] font-bold text-[#27463b]' : 'text-[#2d2d2d]'}`}
