@@ -205,14 +205,14 @@ function Login({ onNavigate, onNotice, notice }: FormProps) {
 
   return (
     <AuthLayout title="EasyClinic" onSubmit={submit} notice={notice}>
-      <Field label="E-mail" type="email" value={email} onChange={setEmail} />
-      <Field label="Senha" type="password" value={senha} onChange={setSenha} />
-      <button className="w-full rounded-lg bg-[#4f7161] px-3 py-3 text-[15px] text-white transition hover:bg-[#3f5c4f]" type="submit">Entrar</button>
-      <div className="mt-5 text-center">
-        <p className="text-sm text-gray-600">
+      <Field label="Login" placeholder="Login" type="email" value={email} onChange={setEmail} variant="underline" />
+      <Field label="Senha" placeholder="Senha" type="password" value={senha} onChange={setSenha} variant="underline" />
+      <button className="mx-auto mt-8 block w-36 rounded-full bg-[#9fbea9] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#789b84]" type="submit">Entrar</button>
+      <div className="absolute bottom-5 left-0 right-0 text-center">
+        <p className="text-xs text-gray-500">
           Novo usuário?{' '}
-          <a className="font-bold text-[#4f7161] hover:underline" href="#cadastro" onClick={() => onNavigate('cadastro')}>
-            Começar agora
+          <a className="font-semibold text-[#4f7161] hover:underline" href="#cadastro" onClick={() => onNavigate('cadastro')}>
+            Crie uma conta aqui
           </a>
         </p>
       </div>
@@ -322,19 +322,21 @@ function AuthLayout({
   // children permite reutilizar a mesma estrutura visual para login e cadastro.
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
-      <div className="flex min-h-[220px] w-full items-center justify-center bg-[#4f7161] md:min-h-screen md:w-[45%]">
-        <div className="text-center text-white">
-          <h1 className="mb-4 text-8xl font-bold">EasyClinic</h1>
-          <p className="text-lg">Sistema Simples de Gestão para Clínicas</p>
-          <br></br>
-          <img src={Assets.Imagens.people} alt='people' />
-        </div>
+      <div className="relative min-h-[190px] w-full overflow-hidden bg-[#64866f] md:min-h-screen md:w-1/2">
+        <img
+          className="absolute inset-0 h-full w-full object-contain object-bottom"
+          src={Assets.Imagens.people}
+          alt="Pacientes e profissional em uma clínica"
+        />
       </div>
-      <div className="flex min-h-[calc(100vh-220px)] w-full items-center justify-center bg-white px-5 py-8 md:min-h-screen md:w-[55%]">
-        <div className="w-full max-w-[450px]">
-          <h2 className="mb-6 text-center text-2xl font-bold text-[#4f7161]">{title}</h2>
-          {notice && <p className="mb-4 text-center text-[#3f5c4f]">{notice}</p>}
-          <form className="space-y-4" onSubmit={onSubmit}>{children}</form>
+      <div className="relative flex min-h-[calc(100vh-190px)] w-full items-center justify-center bg-[#e8eee7] px-6 py-10 md:min-h-screen md:w-1/2 md:px-12">
+        <div className="w-full max-w-[420px]">
+          <h1 className="mb-12 text-center text-5xl font-extrabold text-[#5c967f] drop-shadow-[3px_6px_3px_rgba(45,71,57,0.28)] md:mb-16 md:text-6xl">
+            EasyClinic
+          </h1>
+          {title !== 'EasyClinic' && <h2 className="mb-6 text-center text-2xl font-bold text-[#4f7161]">{title}</h2>}
+          {notice && <p className="mb-4 text-center text-sm text-[#3f5c4f]" role="status">{notice}</p>}
+          <form className={title === 'EasyClinic' ? 'space-y-7' : 'space-y-4'} onSubmit={onSubmit}>{children}</form>
         </div>
       </div>
     </div>
@@ -346,18 +348,25 @@ function Field({
   type = 'text',
   value,
   onChange,
+  placeholder,
+  variant = 'default',
 }: {
   label: string
   type?: string
   value: string
   onChange: (value: string) => void
+  placeholder?: string
+  variant?: 'default' | 'underline'
 }) {
   // onChange envia o novo valor para o componente pai, mantendo o input controlado.
   return (
-    <div className="space-y-1">
-      <label className="block text-sm text-gray-600">{label}</label>
+    <div className={variant === 'underline' ? 'space-y-0' : 'space-y-1'}>
+      <label className={variant === 'underline' ? 'sr-only' : 'block text-sm text-gray-600'}>{label}</label>
       <input
-        className="w-full rounded-lg border border-gray-300 px-3 py-3 text-sm focus:border-[#4f7161] focus:outline-none focus:ring-2 focus:ring-[#4f7161]/20"
+        className={variant === 'underline'
+          ? 'w-full border-0 border-b-2 border-[#c4c1c1] bg-transparent px-1 py-3 text-base text-[#34453a] placeholder:font-semibold placeholder:text-[#9b9999] focus:border-[#5c967f] focus:outline-none'
+          : 'w-full rounded-lg border border-gray-300 px-3 py-3 text-sm focus:border-[#4f7161] focus:outline-none focus:ring-2 focus:ring-[#4f7161]/20'}
+        placeholder={placeholder}
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}

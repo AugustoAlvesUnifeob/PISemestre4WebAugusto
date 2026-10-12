@@ -1,6 +1,17 @@
-<svg width="52" height="47" viewBox="0 0 52 47" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect x="2" y="1" width="48" height="46" rx="6" fill="#D9D9D9"/>
-<rect width="52" height="15" rx="3" fill="#7EB584"/>
-<rect x="4" y="17" width="44" height="25" fill="#BABABA"/>
-<circle cx="7.5" cy="20.5" r="2.5" fill="#DE4343"/>
+<svg width="1008" height="783" viewBox="0 0 1008 783" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="23.802" y="48" width="959.219" height="735" rx="49" fill="white"/>
+<rect x="56.3313" y="217" width="894.16" height="463" rx="38" fill="#D9D9D9"/>
+<line x1="170.874" y1="680.001" x2="170.874" y2="217" stroke="#8E8E8E"/>
+<line x1="290.677" y1="680.001" x2="290.677" y2="217" stroke="#8E8E8E"/>
+<line x1="410.48" y1="680.001" x2="410.48" y2="217" stroke="#8E8E8E"/>
+<line x1="530.284" y1="680.001" x2="530.284" y2="217" stroke="#8E8E8E"/>
+<line x1="650.087" y1="680.001" x2="650.087" y2="217" stroke="#8E8E8E"/>
+<line x1="769.89" y1="680.001" x2="769.89" y2="217" stroke="#8E8E8E"/>
+<line x1="889.693" y1="680.001" x2="889.693" y2="217" stroke="#8E8E8E"/>
+<rect x="93.621" y="699" width="819.581" height="14" rx="7" fill="#D9D9D9"/>
+<rect x="93.621" y="699" width="127.737" height="14" rx="7" fill="#878787"/>
+<rect x="83.3068" y="300" width="142.812" height="128" rx="23" fill="#393480"/>
+<rect x="219.771" y="459" width="142.812" height="128" rx="23" fill="#7E3B7D"/>
+<rect x="413.361" y="306" width="114.249" height="118" rx="23" fill="#7C7E3B"/>
+<rect width="1007.62" height="176" rx="34" fill="#63876C"/>
 </svg>
