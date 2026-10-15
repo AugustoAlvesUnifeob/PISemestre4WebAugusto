@@ -8,6 +8,7 @@ export type Page =
   | 'profissionais'
   | 'tags'
   | 'planos'
+  | 'cadastroUsuario'
   | 'cadastroPaciente'
   | 'cadastroProfissional'
   | 'cadastroTag'

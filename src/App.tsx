@@ -26,6 +26,7 @@ import { PatientForm } from './components/forms/PatientForm'
 import { ProfessionalForm } from './components/forms/ProfessionalForm'
 import { TagForm } from './components/forms/TagForm'
 import { PlanoForm } from './components/forms/PlanoForm'
+import { UsuarioForm } from './components/forms/UsuarioForm'
 import { ReceitaForm, AtestadoForm, LaudoForm } from './components/forms/DocumentForms'
 
 const protectedPages: Page[] = [
@@ -35,6 +36,7 @@ const protectedPages: Page[] = [
   'profissionais',
   'tags',
   'planos',
+  'cadastroUsuario',
   'cadastroPaciente',
   'cadastroProfissional',
   'cadastroTag',
@@ -51,7 +53,7 @@ const protectedPages: Page[] = [
 
 function App() {
   // useState guarda dados que mudam durante a interação e causam nova renderização.
-  const { token } = useAuth()
+  const { token, hasPermission } = useAuth()
   const [page, setPage] = useState<Page>(() =>
     localStorage.getItem('@App:token') ? 'inicio' : 'login',
   )
@@ -65,11 +67,20 @@ function App() {
       setPage('login')
       return
     }
+    if (nextPage === 'cadastroUsuario' && !hasPermission(1)) {
+      setPage(token || hasStoredToken ? 'inicio' : 'login')
+      return
+    }
     setNotice('')
     setPage(nextPage)
   }
 
-  const visiblePage = token || !protectedPages.includes(page) ? page : 'login'
+  const visiblePage =
+    !token && protectedPages.includes(page)
+      ? 'login'
+      : page === 'cadastroUsuario' && !hasPermission(1)
+        ? 'inicio'
+        : page
   const beginEdit = (nextPage: Extract<Page, `editar${string}`>, item: EditingItem) => {
     setEditingItem(item)
     goTo(nextPage)
@@ -87,6 +98,9 @@ function App() {
       {visiblePage === 'agendamentos' && <AppointmentsPage onNavigate={goTo} />}
       {visiblePage === 'editarUsuario' && (
         <EditUserPage onNavigate={goTo} />
+      )}
+      {visiblePage === 'cadastroUsuario' && (
+        <UsuarioForm onNavigate={goTo} onNotice={setNotice} notice={notice} />
       )}
       {visiblePage === 'pacientes' && (
         <RecordsPage kind="pacientes" onNavigate={goTo} onEdit={(item) => beginEdit('editarPaciente', item)} />

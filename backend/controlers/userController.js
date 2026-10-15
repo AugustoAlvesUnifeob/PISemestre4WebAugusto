@@ -29,6 +29,26 @@ module.exports = class UserController{
         }
     }
 
+    static async registerForClinic(req, res){
+        const {usuario, email, senha, tipo} = req.body
+
+        try{
+            const salt = await bcrypt.genSalt(12)
+            const passwordHash = await bcrypt.hash(senha, salt)
+
+            await User.create({
+                usuario,
+                email,
+                senha: passwordHash,
+                tipo: Number(tipo),
+                clinica_cnpj: req.user.clinica_cnpj
+            })
+            return res.status(201).json({message:'Usuario Cadastrado com sucesso'})
+        }catch(error){
+            return res.status(500).json({message: error.message})
+        }
+    }
+
     static async login(req, res){
         //requerer pelo body os parametros
         const {email, senha} = req.body

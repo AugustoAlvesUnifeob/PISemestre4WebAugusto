@@ -10,6 +10,12 @@ const registerValidationRules = ()=>{
     ]
 }
 
+const adminRegisterValidationRules = () => [
+    ...registerValidationRules(),
+    body('email').isEmail().withMessage('Informe um e-mail válido'),
+    body('tipo').isInt({ min: 0, max: 1 }).withMessage('Tipo de usuário inválido'),
+]
+
 //validação
 
 const validate = (req, res, next) => {
@@ -23,5 +29,6 @@ const validate = (req, res, next) => {
 
 module.exports = {
     registerValidationRules,
+    adminRegisterValidationRules,
     validate
 }

@@ -1,28 +1,6 @@
 import { useAuth } from '../../context/AuthContext'
 import { useState } from 'react'
-
-type Page =
-  | 'login'
-  | 'cadastro'
-  | 'inicio'
-    | 'agendamentos'
-  | 'pacientes'
-  | 'profissionais'
-  | 'tags'
-  | 'planos'
-  | 'cadastroPaciente'
-  | 'cadastroProfissional'
-  | 'cadastroTag'
-  | 'cadastroPlano'
-  | 'editarPaciente'
-  | 'editarProfissional'
-  | 'editarTag'
-  | 'editarPlano'
-  | 'receita'
-  | 'atestado'
-  | 'laudo'
-    | 'editarUsuario'
-;
+import type { Page } from '../../types'
 
 const documentLinks: { label: string; page: 'receita' | 'atestado' | 'laudo' }[] = [
     { label: 'Receita', page: 'receita' },
@@ -113,6 +91,19 @@ export function Sidebar({
                         >
                         Planos
                         </li>
+
+                        {user?.tipo === 1 && (
+                            <li
+                                className={`cursor-pointer rounded-full px-3 py-2 transition hover:bg-[#edf4f0] md:mb-4 ${
+                                    active === 'cadastroUsuario'
+                                        ? 'bg-[#edf4f0] font-bold text-[#27463b]'
+                                        : 'text-[#2d2d2d]'
+                                }`}
+                                onClick={() => onNavigate('cadastroUsuario')}
+                            >
+                                Cadastrar usuário
+                            </li>
+                        )}
 
                         <li className="relative md:mb-4">
                             <button
