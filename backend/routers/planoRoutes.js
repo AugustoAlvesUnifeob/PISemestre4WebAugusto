@@ -13,7 +13,7 @@ const verifyToken = require('../helpers/verify-token.js')
 //register
 route.post('/register', verifyToken, registerValidationRules(), validate, planoController.register)
 
-route.post('/update/:idplano', verifyToken, planoController.update);
+route.post('/update/:idplano', verifyToken, registerValidationRules(), validate, planoController.update);
 
 route.post('/delete/:idplano', verifyToken, planoController.delete);
 

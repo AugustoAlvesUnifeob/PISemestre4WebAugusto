@@ -3,7 +3,14 @@ import type { FormProps, RecordItem, SelectOption } from '../../types'
 import { API_URL, fetchWithToken, readResponse, messageFrom } from '../../services/api'
 import { EntityForm } from './EntityForm'
 
-export function PatientForm({ onNavigate, onNotice, notice, item }: FormProps & { item?: RecordItem }) {
+export function PatientForm({
+  onNavigate, onNotice, notice, item, embedded, onSaved, onCancel,
+}: FormProps & {
+  item?: RecordItem
+  embedded?: boolean
+  onSaved?: (values: Record<string, string>) => void
+  onCancel?: () => void
+}) {
   const [tags, setTags] = useState<SelectOption[]>([])
   const [planos, setPlanos] = useState<SelectOption[]>([])
 
@@ -51,6 +58,9 @@ export function PatientForm({ onNavigate, onNotice, notice, item }: FormProps & 
       onNavigate={onNavigate}
       onNotice={onNotice}
       notice={notice}
+      embedded={embedded}
+      onSaved={onSaved}
+      onCancel={onCancel}
       initialValues={item}
       submitLabel={item ? 'Salvar alterações' : 'Cadastrar'}
       fields={[

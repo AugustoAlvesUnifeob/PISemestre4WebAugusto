@@ -1,7 +1,14 @@
 import type { FormProps, RecordItem } from '../../types'
 import { EntityForm } from './EntityForm'
 
-export function ProfessionalForm({ onNavigate, onNotice, notice, item }: FormProps & { item?: RecordItem }) {
+export function ProfessionalForm({
+  onNavigate, onNotice, notice, item, embedded, onSaved, onCancel,
+}: FormProps & {
+  item?: RecordItem
+  embedded?: boolean
+  onSaved?: (values: Record<string, string>) => void
+  onCancel?: () => void
+}) {
   return (
     <EntityForm
       title={item ? 'Editar Profissional' : 'Cadastrar Profissional'}
@@ -10,6 +17,9 @@ export function ProfessionalForm({ onNavigate, onNotice, notice, item }: FormPro
       onNavigate={onNavigate}
       onNotice={onNotice}
       notice={notice}
+      embedded={embedded}
+      onSaved={onSaved}
+      onCancel={onCancel}
       initialValues={item}
       submitLabel={item ? 'Salvar alterações' : 'Cadastrar'}
       fields={[

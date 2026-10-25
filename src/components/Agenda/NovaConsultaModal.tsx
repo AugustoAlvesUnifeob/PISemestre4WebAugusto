@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { PatientForm } from '../forms/PatientForm'
+import { ProfessionalForm } from '../forms/ProfessionalForm'
 
 
 type NovaConsultaModalProps = {
@@ -13,6 +15,8 @@ type NovaConsultaModalProps = {
 type PessoaOption = {
   idpacientes?: number
   iddoutor?: number
+  cpf?: string
+  documento?: string
   nome: string
 }
 
@@ -25,6 +29,8 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
   const [pacientes, setPacientes] = useState<PessoaOption[]>([])
   const [doutores, setDoutores] = useState<PessoaOption[]>([])
   const [carregandoPessoas, setCarregandoPessoas] = useState(true)
+  const [cadastroAberto, setCadastroAberto] = useState<'paciente' | 'profissional' | null>(null)
+  const [avisoCadastro, setAvisoCadastro] = useState('')
   const { token, user } = useAuth()
 
   useEffect(() => {
@@ -54,9 +60,56 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
     carregarPessoas()
   }, [token])
 
+  async function handleCadastroConcluido(tipo: 'paciente' | 'profissional', values: Record<string, string>) {
+    setCadastroAberto(null)
+    setCarregandoPessoas(true)
+    setErro('')
+    try {
+      const headers: Record<string, string> = token
+        ? { Authorization: `Bearer ${token}` }
+        : {}
+      const caminho = tipo === 'paciente' ? '/pacientes/listarByCNPJ' : '/doutores/listarByCNPJ'
+      const resposta = await fetch(`http://localhost:5000${caminho}`, { headers })
+      const dados = await resposta.json()
+      if (!resposta.ok) throw new Error(dados.message || 'Não foi possível atualizar a lista.')
+
+      if (tipo === 'paciente') {
+        const lista: PessoaOption[] = dados.pacientes ?? []
+        setPacientes(lista)
+        const cpf = values.cpf.replace(/\D/g, '')
+        const novo = lista
+          .filter((pessoa) => pessoa.cpf?.replace(/\D/g, '') === cpf)
+          .sort((a, b) => (b.idpacientes ?? 0) - (a.idpacientes ?? 0))[0]
+        if (novo?.idpacientes) setPacienteId(String(novo.idpacientes))
+        else setErro('Paciente cadastrado, mas não foi possível selecioná-lo automaticamente. Selecione-o na busca.')
+      } else {
+        const lista: PessoaOption[] = dados.doutores ?? []
+        setDoutores(lista)
+        const documento = values.documento.trim().toLowerCase()
+        const novo = lista
+          .filter((pessoa) => pessoa.documento?.trim().toLowerCase() === documento)
+          .sort((a, b) => (b.iddoutor ?? 0) - (a.iddoutor ?? 0))[0]
+        if (novo?.iddoutor) setDoutorId(String(novo.iddoutor))
+        else setErro('Profissional cadastrado, mas não foi possível selecioná-lo automaticamente. Selecione-o na busca.')
+      }
+    } catch (error) {
+      setErro(error instanceof Error
+        ? `Cadastro realizado, mas não foi possível atualizar a lista: ${error.message}`
+        : 'Cadastro realizado, mas não foi possível atualizar a lista.')
+    } finally {
+      setCarregandoPessoas(false)
+    }
+  }
+
   async function handleSalvar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setErro('')
+
+    if (!pacienteId || !doutorId) {
+      setErro('Selecione um paciente e um profissional da lista.')
+      return
+    }
+
     if (!user?.clinica_cnpj) {
       setErro('Não foi possível identificar a clínica desta conta.')
       return
@@ -97,6 +150,34 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
     }
   }
 
+  if (cadastroAberto) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[10px]" role="dialog" aria-modal="true">
+          {cadastroAberto === 'paciente' ? (
+            <PatientForm
+              onNavigate={() => setCadastroAberto(null)}
+              onNotice={setAvisoCadastro}
+              notice={avisoCadastro}
+              embedded
+              onCancel={() => setCadastroAberto(null)}
+              onSaved={(values) => { void handleCadastroConcluido('paciente', values) }}
+            />
+          ) : (
+            <ProfessionalForm
+              onNavigate={() => setCadastroAberto(null)}
+              onNotice={setAvisoCadastro}
+              notice={avisoCadastro}
+              embedded
+              onCancel={() => setCadastroAberto(null)}
+              onSaved={(values) => { void handleCadastroConcluido('profissional', values) }}
+            />
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
@@ -117,6 +198,8 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
           <SearchablePersonSelect
             id="consulta-paciente"
             label="Paciente"
+            createLabel="Cadastrar novo paciente"
+            onCreate={() => { setAvisoCadastro(''); setCadastroAberto('paciente') }}
             loading={carregandoPessoas}
             options={pacientes.map((paciente) => ({ id: paciente.idpacientes!, nome: paciente.nome }))}
             placeholder="Buscar paciente pelo nome"
@@ -126,6 +209,8 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
           <SearchablePersonSelect
             id="consulta-doutor"
             label="Doutor(a)"
+            createLabel="Cadastrar novo profissional"
+            onCreate={() => { setAvisoCadastro(''); setCadastroAberto('profissional') }}
             loading={carregandoPessoas}
             options={doutores.map((doutor) => ({ id: doutor.iddoutor!, nome: doutor.nome }))}
             placeholder="Buscar doutor pelo nome"
@@ -169,6 +254,8 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
 function SearchablePersonSelect({
   id,
   label,
+  createLabel,
+  onCreate,
   loading,
   options,
   placeholder,
@@ -177,6 +264,8 @@ function SearchablePersonSelect({
 }: {
   id: string
   label: string
+  createLabel?: string
+  onCreate?: () => void
   loading: boolean
   options: Array<{ id: number; nome: string }>
   placeholder: string
@@ -190,20 +279,32 @@ function SearchablePersonSelect({
 
   return (
     <div className="space-y-1">
-      <label className="block text-sm text-gray-600" htmlFor={id}>{label}</label>
+      <div className="flex items-center justify-between gap-2">
+        <label className="block text-sm text-gray-600" htmlFor={id}>{label}</label>
+        {onCreate && (
+          <button
+            type="button"
+            className="cursor-pointer text-sm font-medium text-[#4f7161] hover:underline"
+            onClick={onCreate}
+          >
+            + {createLabel}
+          </button>
+        )}
+      </div>
       <div className="relative">
         <input
           autoComplete="off"
-          className="w-full rounded-lg border border-gray-300 px-3 py-3 text-sm focus:border-[#4f7161] focus:outline-none focus:ring-2 focus:ring-[#4f7161]/20"
+          className="w-full rounded-lg border border-gray-300 px-3 py-3 text-sm text-gray-800 focus:border-[#4f7161] focus:outline-none focus:ring-2 focus:ring-[#4f7161]/20"
           id={id}
-          placeholder={selecionado?.nome ?? placeholder}
+          placeholder={placeholder}
           role="combobox"
           aria-expanded={aberto}
           aria-controls={`${id}-options`}
           aria-autocomplete="list"
           required={!value}
-          value={query}
+          value={query || selecionado?.nome || ''}
           onFocus={() => setAberto(true)}
+          onBlur={() => setAberto(false)}
           onChange={(event) => {
             setQuery(event.target.value)
             setAberto(true)

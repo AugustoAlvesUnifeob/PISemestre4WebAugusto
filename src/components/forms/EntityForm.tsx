@@ -17,6 +17,9 @@ export function EntityForm({
   notice,
   initialValues,
   submitLabel = 'Cadastrar',
+  embedded = false,
+  onSaved,
+  onCancel,
 }: {
   title: string
   back: Page
@@ -29,6 +32,9 @@ export function EntityForm({
   notice: string
   initialValues?: Record<string, string | number | boolean | number[] | undefined>
   submitLabel?: string
+  embedded?: boolean
+  onSaved?: (values: Record<string, string>) => void
+  onCancel?: () => void
 }) {
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(fields.map((field) => [field.name, String(initialValues?.[field.name] ?? '')])),
@@ -39,6 +45,12 @@ export function EntityForm({
     if (fields.some((field) => !field.optional && field.type !== 'multiselect' && !values[field.name]))
       return onNotice('Por favor, preencha todos os campos obrigatórios!')
 
+    if ('valordesconto' in values) {
+      const desconto = Number(values.valordesconto.replace(',', '.'))
+      if (!Number.isFinite(desconto) || desconto < 0 || desconto > 100)
+        return onNotice('Informe um desconto válido entre 0 e 100%.')
+    }
+
     const payload = Object.fromEntries(
       fields.map((field) => [
         field.name,
@@ -47,7 +59,9 @@ export function EntityForm({
           : field.type === 'radio'
             ? values[field.name] === 'true' ? 1 : 0
             : field.type === 'number' || field.type === 'select'
-              ? Number(values[field.name])
+              ? Number(field.name === 'valordesconto'
+                ? values[field.name].replace(',', '.')
+                : values[field.name])
               : values[field.name],
       ]),
     )
@@ -61,7 +75,12 @@ export function EntityForm({
         if (!response.ok) throw new Error(messageFrom(response.data))
         onNotice('Cadastro realizado com sucesso!')
       }
-      onNavigate(back)
+
+      if (onSaved) {
+        onSaved(values)
+      } else {
+        onNavigate(back)
+      }
     } catch (error) {
       onNotice(
         error instanceof Error ? error.message : 'Erro ao realizar cadastro.',
@@ -69,32 +88,46 @@ export function EntityForm({
     }
   }
 
-  return (
-    <Sidebar active={active ?? back} onNavigate={onNavigate}>
-      <div className="mx-auto max-w-2xl rounded-[10px] bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.1)] md:p-8">
-        <h1 className="mb-7 text-2xl font-bold text-[#4f7161]">{title}</h1>
-        {notice && <p className="notice">{notice}</p>}
-        <form onSubmit={submit}>
-          {fields.map((field) => (
-            <EntityField
-              key={field.name}
-              field={field}
-              value={values[field.name]}
-              onChange={(value) =>
-                setValues((current) => ({ ...current, [field.name]: value }))
-              }
-            />
-          ))}
-          <button className='cadastrar' type="submit">{submitLabel}</button>
-        </form>
-        <div className="mt-5 text-center">
+  const content = (
+    <div className="mx-auto max-w-2xl rounded-[10px] bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.1)] md:p-8">
+      <h1 className="mb-7 text-2xl font-bold text-[#4f7161]">{title}</h1>
+      {notice && <p className="notice">{notice}</p>}
+      <form onSubmit={submit}>
+        {fields.map((field) => (
+          <EntityField
+            key={field.name}
+            field={field}
+            value={values[field.name]}
+            onChange={(value) =>
+              setValues((current) => ({ ...current, [field.name]: value }))
+            }
+          />
+        ))}
+        <button className='cadastrar' type="submit">{submitLabel}</button>
+      </form>
+      <div className="mt-5 text-center">
+        {embedded ? (
+          <button
+            type="button"
+            className="font-bold text-[#4f7161] hover:underline cursor-pointer"
+            onClick={onCancel}
+          >
+            Cancelar
+          </button>
+        ) : (
           <p>
             <a className="font-bold text-[#4f7161] hover:underline" href={`#${back}`} onClick={() => onNavigate(back)}>
               Voltar
             </a>
           </p>
-        </div>
+        )}
       </div>
+    </div>
+  )
+
+  return embedded ? content : (
+    <Sidebar active={active ?? back} onNavigate={onNavigate}>
+      {content}
     </Sidebar>
   )
 }
