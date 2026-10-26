@@ -6,6 +6,7 @@ const registerValidationRules = ()=>{
         body('descricao').notEmpty().withMessage('O nome é obrigatorio'),
         body('aplicadesconto').notEmpty().withMessage('O nome é obrigatorio'),
         body('exonera').notEmpty().withMessage('O nome é obrigatorio'),
+        body('valordesconto').isFloat({min: 0, max: 100}).withMessage('O desconto deve ser um número entre 0 e 100'),
     ]
 }
 

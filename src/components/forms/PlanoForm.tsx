@@ -11,7 +11,11 @@ export function PlanoForm({ onNavigate, onNotice, notice, item }: FormProps & { 
       onNavigate={onNavigate}
       onNotice={onNotice}
       notice={notice}
-      initialValues={item}
+      initialValues={item ? {
+        ...item,
+        aplicadesconto: Number(item.aplicadesconto) === 1,
+        exonera: Number(item.exonera) === 1,
+      } : undefined}
       submitLabel={item ? 'Salvar alterações' : 'Cadastrar'}
       fields={[
         { label: 'Nome', name: 'descricao' },
@@ -25,7 +29,7 @@ export function PlanoForm({ onNavigate, onNotice, notice, item }: FormProps & { 
             { label: 'Não', value: 'false' },
           ],
         },
-        { label: 'Valor Desconto', name: 'valordesconto' },
+        { label: 'Valor do desconto (%)', name: 'valordesconto', type: 'number' },
         {
           label: 'Exonera',
           name: 'exonera',

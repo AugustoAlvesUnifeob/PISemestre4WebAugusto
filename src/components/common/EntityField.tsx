@@ -104,15 +104,32 @@ export function EntityField({
     )
   }
 
+  const isPercentage = field.name === 'valordesconto'
+
   return (
     <div className="space-y-1">
       <label className="block text-sm text-gray-600">{field.label}</label>
-      <input
-        className="w-full rounded-lg border border-gray-300 px-3 py-3 text-sm focus:border-[#4f7161] focus:outline-none focus:ring-2 focus:ring-[#4f7161]/20"
-        type={field.type ?? 'text'}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-      />
+      <div className="relative">
+        <input
+          className={`w-full rounded-lg border border-gray-300 px-3 py-3 text-sm focus:border-[#4f7161] focus:outline-none focus:ring-2 focus:ring-[#4f7161]/20 ${isPercentage ? 'pr-10' : ''}`}
+          type={isPercentage ? 'text' : field.type ?? 'text'}
+          inputMode={isPercentage ? 'decimal' : undefined}
+          value={value}
+          onChange={(event) => {
+            const next = event.target.value
+            if (isPercentage) {
+              if (!/^\d*(?:[.,]\d{0,2})?$/.test(next)) return
+              if (next !== '' && Number(next.replace(',', '.')) > 100) return
+            }
+            onChange(next)
+          }}
+        />
+        {isPercentage && (
+          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
+            %
+          </span>
+        )}
+      </div>
     </div>
   )
 }
