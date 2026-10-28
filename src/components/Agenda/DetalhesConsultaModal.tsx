@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { Assets } from '../AssetsClass'
 
 type DetalhesConsultaModalProps = {
   consulta: {
@@ -7,6 +8,8 @@ type DetalhesConsultaModalProps = {
     pacienteId: number
     doutorId: number
     pacienteNome: string
+    pacienteTelefone?: string
+    pacienteEmail?: string
     doutorNome: string
     inicio: Date
     status?: string
@@ -20,6 +23,20 @@ export default function DetalhesConsultaModal({ consulta, aoFechar, aoExcluir }:
   const [apagando, setApagando] = useState(false)
   const [erro, setErro] = useState('')
   const { token } = useAuth()
+  const telefone = consulta.pacienteTelefone?.replace(/\D/g, '')
+  const telefoneWhatsApp = telefone
+    ? telefone.startsWith('55') ? telefone : `55${telefone}`
+    : ''
+  const telefoneValido = /^\d{12,13}$/.test(telefoneWhatsApp)
+  const mensagemWhatsApp = `Olá, ${consulta.pacienteNome}! Gostaria de confirmar seu agendamento para ${consulta.inicio.toLocaleString('pt-BR')}, com o(a) ${consulta.doutorNome}. Está tudo certo?`
+  const linkWhatsApp = telefoneValido
+    ? `https://wa.me/${telefoneWhatsApp}?text=${encodeURIComponent(mensagemWhatsApp)}`
+    : null
+  const emailPaciente = consulta.pacienteEmail?.trim() ?? ''
+  const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailPaciente)
+  const linkEmail = emailValido
+    ? `mailto:${encodeURIComponent(emailPaciente)}?subject=${encodeURIComponent('Confirmação de agendamento')}&body=${encodeURIComponent(mensagemWhatsApp)}`
+    : null
 
   async function apagarAgendamento() {
     setApagando(true)
@@ -109,14 +126,76 @@ export default function DetalhesConsultaModal({ consulta, aoFechar, aoExcluir }:
           >
             Apagar agendamento
           </button>
-          <button
-            className="rounded-lg bg-[#4f7161] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#3f5c4f]"
-            disabled={apagando}
-            type="button"
-            onClick={aoFechar}
-          >
-            Fechar
-          </button>
+          <div className="flex gap-2">
+            {linkWhatsApp ? (
+              <a
+                aria-label="Enviar confirmação pelo WhatsApp"
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#25D366] text-sm font-bold text-white transition hover:bg-[#1fb957]"
+                href={linkWhatsApp}
+                rel="noopener noreferrer"
+                target="_blank"
+                title="Enviar confirmação pelo WhatsApp"
+              >
+                <img
+                  className="h-5 w-5"
+                  src={Assets.Imagens.whatsapp}
+                  alt="Pacientes e profissional em uma clínica"
+                />
+              </a>
+            ) : (
+              <button
+                aria-label="WhatsApp indisponível: verifique o telefone do paciente"
+                className="h-10 w-10 cursor-not-allowed rounded-lg bg-gray-300 text-sm font-bold text-white"
+                disabled
+                title={!telefone
+                  ? 'Cadastre o telefone do paciente para usar o WhatsApp'
+                  : 'O telefone do paciente não é válido para o WhatsApp'}
+                type="button"
+              >
+                <img
+                  className="h-5 w-5"
+                  src={Assets.Imagens.whatsapp}
+                  alt="Pacientes e profissional em uma clínica"
+                />
+              </button>
+            )}
+            {linkEmail ? (
+              <a
+                aria-label="Enviar confirmação por e-mail"
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#ab183a] text-sm font-bold text-white transition hover:bg-[#701026]"
+                href={linkEmail}
+                title="Enviar confirmação por e-mail"
+              >
+                <img
+                  className="h-5 w-5"
+                  src={Assets.Imagens.email}
+                  alt="Pacientes e profissional em uma clínica"
+                />
+              </a>
+            ) : (
+              <button
+                aria-label="E-mail indisponível: verifique o e-mail do paciente"
+                className="h-10 w-10 cursor-not-allowed rounded-lg bg-gray-300 text-sm font-bold text-white"
+                disabled
+                title="Cadastre um e-mail válido para o paciente"
+                type="button"
+              >
+                <img
+                  className="h-5 w-5"
+                  src={Assets.Imagens.email}
+                  alt="Pacientes e profissional em uma clínica"
+                />
+              </button>
+            )}
+            <button
+              className="rounded-lg bg-[#4f7161] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#3f5c4f]"
+              disabled={apagando}
+              type="button"
+              onClick={aoFechar}
+            >
+              Fechar
+            </button>
+          </div>
         </div>
       </section>
     </div>
