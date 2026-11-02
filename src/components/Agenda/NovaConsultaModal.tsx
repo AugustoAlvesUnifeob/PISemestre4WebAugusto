@@ -69,7 +69,7 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
         ? { Authorization: `Bearer ${token}` }
         : {}
       const caminho = tipo === 'paciente' ? '/pacientes/listarByCNPJ' : '/doutores/listarByCNPJ'
-      const resposta = await fetch(`http://localhost:5000${caminho}`, { headers })
+      const resposta = await fetch(`${API_URL}${caminho}`, { headers })
       const dados = await resposta.json()
       if (!resposta.ok) throw new Error(dados.message || 'Não foi possível atualizar a lista.')
 
