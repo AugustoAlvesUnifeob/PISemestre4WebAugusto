@@ -7,6 +7,7 @@ import interactionPlugin from '@fullcalendar/interaction'
 import NovaConsultaModal from './NovaConsultaModal'
 import DetalhesConsultaModal from './DetalhesConsultaModal'
 import { useAuth } from '../../context/AuthContext'
+import { API_URL } from '../../services/api'
 
 type AgendamentoApi = {
     idagenda: number
@@ -90,9 +91,9 @@ export function Agenda({ permitirNavegacao = false }: { permitirNavegacao?: bool
                 ? { Authorization: `Bearer ${token}` }
                 : {}
             const [agendaResponse, pacientesResponse, doutoresResponse] = await Promise.all([
-                fetch('http://localhost:5000/agenda'),
-                fetch('http://localhost:5000/pacientes/listarByCNPJ', { headers }),
-                fetch('http://localhost:5000/doutores/listarByCNPJ', { headers }),
+                fetch(`${API_URL}`),
+                fetch(`${API_URL}`, { headers }),
+                fetch(`${API_URL}`, { headers }),
             ])
             if (!agendaResponse.ok) throw new Error('Erro ao carregar agenda')
 

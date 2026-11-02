@@ -5,7 +5,7 @@ import type { FormEvent } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { PatientForm } from '../forms/PatientForm'
 import { ProfessionalForm } from '../forms/ProfessionalForm'
-
+import { API_URL } from '../../services/api'
 
 type NovaConsultaModalProps = {
   aoFechar: () => void
@@ -40,8 +40,8 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
           ? { Authorization: `Bearer ${token}` }
           : {}
         const [pacientesResponse, doutoresResponse] = await Promise.all([
-          fetch('http://localhost:5000/pacientes/listarByCNPJ', { headers }),
-          fetch('http://localhost:5000/doutores/listarByCNPJ', { headers }),
+          fetch(`${API_URL}/pacientes/listarByCNPJ`, { headers }),
+          fetch(`${API_URL}/doutores/listarByCNPJ`, { headers }),
         ])
         const pacientesData = await pacientesResponse.json()
         const doutoresData = await doutoresResponse.json()

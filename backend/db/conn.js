@@ -1,23 +1,15 @@
-//requer o sequelize
+require('dotenv').config()
 const Sequelize = require('sequelize')
 
-//parametros de conexao
 const conn = new Sequelize(
-    'easyclinic',
-    'root',
-    '',
-    {
-        host:'localhost',
-        dialect:'mysql',
-        port:3306
-    }
+  process.env.DB_NAME || 'easyclinic',
+  process.env.DB_USER || 'root',
+  process.env.DB_PASS || '',
+  { host: process.env.DB_HOST || 'localhost', dialect: 'mysql', port: 3306 }
 )
 
-try{
-    conn.authenticate
-    console.info('Banco de dados conectado com sucesso!')
-}catch(error){
-    console.info(`Não foi possivel conectar ao banco: ${error}`)
-}
+conn.authenticate()
+  .then(() => console.info('Banco de dados conectado com sucesso!'))
+  .catch(error => console.info(`Não foi possível conectar ao banco: ${error}`))
 
 module.exports = conn

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { Assets } from '../AssetsClass'
+import { API_URL } from '../../services/api'
 
 type DetalhesConsultaModalProps = {
   consulta: {
@@ -42,7 +43,7 @@ export default function DetalhesConsultaModal({ consulta, aoFechar, aoExcluir }:
     setApagando(true)
     setErro('')
     try {
-      const response = await fetch(`http://localhost:5000/agenda/delete/${consulta.id}`, {
+      const response = await fetch(`${API_URL}/agenda/delete/${consulta.id}`, {
         method: 'DELETE',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
