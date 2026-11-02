@@ -69,7 +69,7 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
         ? { Authorization: `Bearer ${token}` }
         : {}
       const caminho = tipo === 'paciente' ? '/pacientes/listarByCNPJ' : '/doutores/listarByCNPJ'
-      const resposta = await fetch(`${API_URL}${caminho}`, { headers })
+      const resposta = await fetch(`${API_URL}/${caminho}`, { headers })
       const dados = await resposta.json()
       if (!resposta.ok) throw new Error(dados.message || 'Não foi possível atualizar a lista.')
 
@@ -116,7 +116,7 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
     }
     setSalvando(true)
     try {
-      const resposta = await fetch('http://localhost:5000/agenda', {
+      const resposta = await fetch('http://${API_URL}/agenda', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
