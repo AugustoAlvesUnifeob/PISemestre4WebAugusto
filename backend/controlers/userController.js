@@ -140,13 +140,11 @@ module.exports = class UserController{
         const clinica_cnpj = req.user.clinica_cnpj
         
         try{
-            const Users = await User.findAll({where: clinica_cnpj})
-            if(!Users){
-                Users = "Nenhum usuario cadastrado"
-            }
+            const users = await User.findAll({where: {clinica_cnpj}})
+            return res.status(200).json({users})
         }
         catch(error){
-            res.status(500).json({error: error})
+            return res.status(500).json({message: error.message})
         }
     }
 

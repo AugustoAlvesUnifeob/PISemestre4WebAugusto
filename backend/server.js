@@ -25,6 +25,7 @@ const tagRoutes = require('./routers/tagRoutes.js')
 const agendaRoutes = require('./routers/agendaRoutes.js')
 const anamineseRoutes = require('./routers/anamineseRoutes.js')
 const documentRoutes = require('./routers/documentRoutes.js')
+const tagpacienteRoutes = require('./routers/tagpacienteRoutes.js')
 
 //configurando JSON response
 api.use(express.json())
@@ -42,8 +43,17 @@ api.use('/plano', planoRoutes)
 api.use('/agenda', agendaRoutes)
 api.use('/anaminese', anamineseRoutes)
 api.use('/documentos', documentRoutes)
+api.use('/tagpaciente', tagpacienteRoutes)
 
 //start api
 conn.sync()
-    .then(()=>{api.listen(5000)})
-    .catch(error=>{console.info(error)})
+    .then(() => {
+        const port = Number(process.env.PORT) || 5000
+        api.listen(port, '0.0.0.0', () => {
+            console.info(`API disponível na porta ${port}`)
+        })
+    })
+    .catch(error => {
+        console.error('Não foi possível iniciar a API:', error)
+        process.exitCode = 1
+    })

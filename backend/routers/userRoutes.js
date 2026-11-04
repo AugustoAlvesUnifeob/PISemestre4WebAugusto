@@ -32,8 +32,8 @@ route.post('/delete/:idusuario', verifyToken, UserController.delete);
 //listar todos
 route.get('/', verifyToken, UserController.listAll)
 
-route.get('/:idusuario', verifyToken, UserController.listarOne)
-
 route.get('/listarByCNPJ', verifyToken, UserController.listarByCNPJ)
+
+route.get('/:idusuario', verifyToken, UserController.listarOne)
 
 module.exports = route

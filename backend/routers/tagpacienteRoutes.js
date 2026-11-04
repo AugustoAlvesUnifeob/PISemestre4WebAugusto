@@ -20,6 +20,6 @@ route.get('/', verifyToken, tagpacienteController.listAll)
 
 route.get('/:id', verifyToken, tagpacienteController.listarOne)
 
-route.get('/:pacientes_idpacientes', verifyToken, tagpacienteController.listarPaciente)
+route.get('/paciente/:pacientes_idpacientes', verifyToken, tagpacienteController.listarPaciente)
 
 module.exports = route

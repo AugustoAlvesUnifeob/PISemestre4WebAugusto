@@ -7,7 +7,7 @@ import interactionPlugin from '@fullcalendar/interaction'
 import NovaConsultaModal from './NovaConsultaModal'
 import DetalhesConsultaModal from './DetalhesConsultaModal'
 import { useAuth } from '../../context/AuthContext'
-import { API_URL } from '../../services/api'
+import { API_URL, messageFrom, readResponse } from '../../services/api'
 
 type AgendamentoApi = {
     idagenda: number
@@ -38,8 +38,40 @@ type ConsultaSelecionada = {
     status: string
 }
 
+function parseDataHoraLocal(value: string) {
+    if (/[zZ]$|[+-]\d{2}:\d{2}$/.test(value)) {
+        const data = new Date(value)
+        if (Number.isNaN(data.getTime())) {
+            throw new Error('A API retornou um horário inválido para um agendamento.')
+        }
+        return data
+    }
+
+    const partes = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?/.exec(value)
+    if (partes) {
+    
+        return new Date(
+            Number(partes[1]),
+            Number(partes[2]) - 1,
+            Number(partes[3]),
+            Number(partes[4]),
+            Number(partes[5]),
+            Number(partes[6] ?? 0),
+            Number((partes[7] ?? '').padEnd(3, '0') || 0),
+        )
+    }
+
+    const data = new Date(value)
+    if (Number.isNaN(data.getTime())) {
+        throw new Error('A API retornou um horário inválido para um agendamento.')
+    }
+    return data
+}
+
 export function Agenda({ permitirNavegacao = false }: { permitirNavegacao?: boolean }){
     const [eventos, setEventos] = useState<EventInput[]>([])
+    const [erroAgenda, setErroAgenda] = useState('')
+    const calendarioRef = useRef<FullCalendar | null>(null)
     const coresDoutores = useRef<{ chave: string; cores: Map<number, string> } | null>(null)
     const { user } = useAuth()
     const inicioSemana = new Date()
@@ -47,7 +79,6 @@ export function Agenda({ permitirNavegacao = false }: { permitirNavegacao?: bool
     inicioSemana.setHours(0, 0, 0, 0)
     const fimSemana = new Date(inicioSemana)
     fimSemana.setDate(fimSemana.getDate() + 7)
-
     // Como combinado gente, os agendamentos serão feitos através de
     // um botão que abre uma janela na tela para inserir as informacoes
 
@@ -85,19 +116,27 @@ export function Agenda({ permitirNavegacao = false }: { permitirNavegacao?: bool
     }, [])
 
     async function buscarAgendamentos() {
+        setErroAgenda('')
         try {
             const token = localStorage.getItem('@App:token')
             const headers: Record<string, string> = token
                 ? { Authorization: `Bearer ${token}` }
                 : {}
             const [agendaResponse, pacientesResponse, doutoresResponse] = await Promise.all([
-                fetch(`${API_URL}`),
-                fetch(`${API_URL}`, { headers }),
-                fetch(`${API_URL}`, { headers }),
+                fetch(`${API_URL}/agenda`, { headers }),
+                fetch(`${API_URL}/pacientes/listarByCNPJ`, { headers }),
+                fetch(`${API_URL}/doutores/listarByCNPJ`, { headers }),
             ])
-            if (!agendaResponse.ok) throw new Error('Erro ao carregar agenda')
+            const agendaData = await readResponse(agendaResponse) as {
+                agendamentos?: AgendamentoApi[]
+                message?: string
+                errors?: { msg?: string }[]
+            }
+            if (!agendaResponse.ok) throw new Error(messageFrom(agendaData))
+            if (!Array.isArray(agendaData.agendamentos)) {
+                throw new Error('A API retornou uma lista de agendamentos inválida.')
+            }
 
-            const agendaData: { agendamentos: AgendamentoApi[] } = await agendaResponse.json()
             const pacientesData: { pacientes: PessoaApi[] } = pacientesResponse.ok
                 ? await pacientesResponse.json()
                 : { pacientes: [] }
@@ -118,7 +157,7 @@ export function Agenda({ permitirNavegacao = false }: { permitirNavegacao?: bool
                 return {
                     id: String(agendamento.idagenda),
                     title: `${pacienteNome} · ${doutorNome}`,
-                    start: agendamento.datahora,
+                    start: parseDataHoraLocal(agendamento.datahora),
                     backgroundColor: corDoutor,
                     borderColor: corDoutor,
                     extendedProps: {
@@ -133,7 +172,8 @@ export function Agenda({ permitirNavegacao = false }: { permitirNavegacao?: bool
                 }
             }))
         } catch (error) {
-            console.error(error)
+            setEventos([])
+            setErroAgenda(error instanceof Error ? error.message : 'Não foi possível carregar os agendamentos.')
         }
     }
 
@@ -157,8 +197,18 @@ export function Agenda({ permitirNavegacao = false }: { permitirNavegacao?: bool
                 + Nova consulta
             </button>
 
+            {erroAgenda && (
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
+                    <span>{erroAgenda}</span>
+                    <button className="font-semibold underline" onClick={() => void buscarAgendamentos()} type="button">
+                        Tentar novamente
+                    </button>
+                </div>
+            )}
+
             <div className="agenda-calendar overflow-x-auto">
                 <FullCalendar
+                    ref={calendarioRef}
                     plugins={[timeGridPlugin, interactionPlugin]}
                     initialView="timeGridWeek"
                     initialDate={new Date()}
@@ -172,8 +222,8 @@ export function Agenda({ permitirNavegacao = false }: { permitirNavegacao?: bool
                     eventClick={handleEventClick}
                     events={eventos}
                     height="auto"
-                    slotMinTime="06:00:00"
-                    slotMaxTime="19:00:00"
+                    slotMinTime="00:00:00"
+                    slotMaxTime="24:00:00"
                     slotEventOverlap={false}
                     eventContent={(info) => (
                         <div className="flex min-w-0 flex-col overflow-hidden px-1 py-0.5 text-xs leading-tight">
@@ -187,9 +237,10 @@ export function Agenda({ permitirNavegacao = false }: { permitirNavegacao?: bool
             {modalNovaAberto && (
                 <NovaConsultaModal
                 aoFechar={() => setModalNovaAberto(false)}
-                aoSalvar={() => {
+                aoSalvar={(dataHora) => {
                     setModalNovaAberto(false)
-                    buscarAgendamentos()
+                    calendarioRef.current?.getApi().gotoDate(parseDataHoraLocal(dataHora))
+                    void buscarAgendamentos()
                 }}
                 />
             )}
