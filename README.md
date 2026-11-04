@@ -129,11 +129,13 @@ As telas existentes são:
 
 As telas internas verificam a existência de autenticação antes de serem exibidas.
 
-A URL da API utilizada diretamente pelo front-end é:
+A API local utiliza `http://localhost:5000`. Em desenvolvimento, o front-end usa esse endereço por padrão. Para configurar outro endereço, crie um arquivo `.env.local` na raiz do projeto:
 
-```text
-http://localhost:5000
+```env
+VITE_API_URL=http://localhost:5000
 ```
+
+Para publicar, configure `VITE_API_URL` no ambiente de build do front-end com a URL pública da API (por exemplo, `https://api.seudominio.com`). Se o front-end e a API forem servidos pelo mesmo domínio, essa variável pode ficar vazia para usar o mesmo host. Configure também `PORT` no ambiente do backend; localmente a API usa `5000` por padrão. O backend escuta em todas as interfaces de rede, como esperado por serviços de hospedagem na AWS.
 
 ---
 

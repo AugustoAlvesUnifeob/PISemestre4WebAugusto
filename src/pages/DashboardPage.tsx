@@ -13,7 +13,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: Page) => void }) 
             AGENDA DA SEMANA
           </h2>
           <div className="rounded-b-lg bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
-            <Agenda />
+            <Agenda permitirNavegacao />
           </div>
         </section>
 

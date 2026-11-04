@@ -3,10 +3,12 @@ const Agenda = require('../models/Agenda')
 module.exports = class AgendaController {
     static async listAll(req, res) {
         try {
-            const agendamentos = await Agenda.findAll()
-            res.status(200).json({ agendamentos })
+            const agendamentos = await Agenda.findAll({
+                where: { clinica_cnpj: req.user.clinica_cnpj }
+            })
+            return res.status(200).json({ agendamentos })
         } catch (error) {
-            res.status(500).json({ error: error.message })
+            return res.status(500).json({ message: error.message })
         }
     }
 
@@ -15,7 +17,6 @@ module.exports = class AgendaController {
             datahora,
             doutor_iddoutor,
             pacientes_idpacientes,
-            clinica_cnpj
         } = req.body
 
         try {
@@ -23,11 +24,11 @@ module.exports = class AgendaController {
                 datahora,
                 doutor_iddoutor,
                 pacientes_idpacientes,
-                clinica_cnpj
+                clinica_cnpj: req.user.clinica_cnpj
             })
-            res.status(201).json({ agendamento })
+            return res.status(201).json({ agendamento })
         } catch (error) {
-            res.status(500).json({ error: error.message })
+            return res.status(500).json({ message: error.message })
         }
     }
 

@@ -43,30 +43,27 @@ module.exports = class TagpacienteController{
     }
 
     static async listarOne(req, res){
-        const id = req.params
+        const { id } = req.params
 
         try{
-            const Tags = await Tagpaciente.findOne({where: id})
-            if(!Tags){
-                Tags = "Tagpaciente não cadastrado"
-            }
+            const tag = await Tagpaciente.findByPk(id)
+            if(!tag) return res.status(404).json({message: 'Tag de paciente não cadastrada'})
+            return res.status(200).json({tag})
         }
         catch(error){
-            res.status(500).json({error: error})
+            return res.status(500).json({message: error.message})
         }
     }
 
     static async listarPaciente(req, res){
-        const pacientes_idpacientes = req.params
+        const { pacientes_idpacientes } = req.params
 
         try{
-            const Tags = await Tagpaciente.findAll({where: pacientes_idpacientes})
-            if(!Tags){
-                Tags = "Tagpaciente não cadastrado"
-            }
+            const tags = await Tagpaciente.findAll({where: { pacientes_idpacientes }})
+            return res.status(200).json({tags})
         }
         catch(error){
-            res.status(500).json({error: error})
+            return res.status(500).json({message: error.message})
         }
     }
 }

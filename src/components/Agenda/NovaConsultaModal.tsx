@@ -9,7 +9,7 @@ import { API_URL } from '../../services/api'
 
 type NovaConsultaModalProps = {
   aoFechar: () => void
-  aoSalvar: () => void
+  aoSalvar: (dataHora: string) => void
 }
 
 type PessoaOption = {
@@ -69,7 +69,7 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
         ? { Authorization: `Bearer ${token}` }
         : {}
       const caminho = tipo === 'paciente' ? '/pacientes/listarByCNPJ' : '/doutores/listarByCNPJ'
-      const resposta = await fetch(`${API_URL}/${caminho}`, { headers })
+      const resposta = await fetch(`${API_URL}${caminho}`, { headers })
       const dados = await resposta.json()
       if (!resposta.ok) throw new Error(dados.message || 'Não foi possível atualizar a lista.')
 
@@ -114,9 +114,10 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
       setErro('Não foi possível identificar a clínica desta conta.')
       return
     }
+    const dataHoraUtc = new Date(dataHora).toISOString()
     setSalvando(true)
     try {
-      const resposta = await fetch('http://${API_URL}/agenda', {
+      const resposta = await fetch(`${API_URL}/agenda`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -125,7 +126,7 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
         body: JSON.stringify({
           pacientes_idpacientes: Number(pacienteId),
           doutor_iddoutor: Number(doutorId),
-          datahora: dataHora,
+          datahora: dataHoraUtc,
           clinica_cnpj: user.clinica_cnpj,
         })
       })
@@ -142,7 +143,7 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
         return
       }
 
-      aoSalvar()
+      aoSalvar(dataHora)
     } catch (error) {
       setErro(error instanceof Error ? error.message : 'Erro ao criar agendamento')
     } finally {
