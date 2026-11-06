@@ -1,5 +1,5 @@
- // --------------------
-import { useState } from 'react';
+// --------------------
+import { useEffect, useState } from 'react';
 import './index.css';
 import { useAuth } from './context/AuthContext'
 
@@ -22,8 +22,9 @@ import { EditUserPage } from './pages/EditUserPage'
 import { RecordsPage } from './pages/RecordsPage'
 import { TagsPage } from './pages/TagsPage'
 import { PlanosPage } from './pages/PlanosPage'
+import { NotFoundPage } from './pages/NotFoundPage'
+import { Sidebar } from './components/Sidebar/Sidebar'
 import { ServicosPage } from './pages/ServicosPage'
-
 import { PatientForm } from './components/forms/PatientForm'
 import { ProfessionalForm } from './components/forms/ProfessionalForm'
 import { TagForm } from './components/forms/TagForm'
@@ -58,39 +59,81 @@ const protectedPages: Page[] = [
   'editarUsuario'
 ]
 
+const validPages: Page[] = ['login', 'cadastro', ...protectedPages]
+
+function getPageFromUrl(): Page | 'notFound' {
+  const path = window.location.pathname.replace(/^\/|\/$/g, '')
+
+  if (!path || path === 'index.html') {
+    return localStorage.getItem('@App:token') ? 'inicio' : 'login'
+  }
+
+  return validPages.includes(path as Page) ? path as Page : 'notFound'
+}
+
 function App() {
   // useState guarda dados que mudam durante a interação e causam nova renderização.
   const { token, hasPermission } = useAuth()
-  const [page, setPage] = useState<Page>(() =>
-    localStorage.getItem('@App:token') ? 'inicio' : 'login',
-  )
+  const [page, setPage] = useState<Page | 'notFound'>(getPageFromUrl)
   const [notice, setNotice] = useState('')
   const [editingItem, setEditingItem] = useState<EditingItem | null>(null)
+
+  function changePage(nextPage: Page) {
+    window.history.pushState({}, '', nextPage === 'inicio' ? '/' : `/${nextPage}`)
+    setPage(nextPage)
+  }
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setPage(getPageFromUrl())
+      setEditingItem(null)
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
 
   // O componente pai controla a tela atual e passa esta função aos filhos via props.
   const goTo = (nextPage: Page) => {
     const hasStoredToken = Boolean(localStorage.getItem('@App:token'))
     if (!token && !hasStoredToken && protectedPages.includes(nextPage)) {
-      setPage('login')
+      changePage('login')
       return
     }
     if (nextPage === 'cadastroUsuario' && !hasPermission(1)) {
-      setPage(token || hasStoredToken ? 'inicio' : 'login')
+      changePage(token || hasStoredToken ? 'inicio' : 'login')
       return
     }
     setNotice('')
-    setPage(nextPage)
+    changePage(nextPage)
   }
 
+  const isProtectedPage = page !== 'notFound' && protectedPages.includes(page)
+
   const visiblePage =
-    !token && protectedPages.includes(page)
+    !token && (page === 'notFound' || isProtectedPage)
       ? 'login'
       : page === 'cadastroUsuario' && !hasPermission(1)
         ? 'inicio'
         : page
+
   const beginEdit = (nextPage: Extract<Page, `editar${string}`>, item: EditingItem) => {
     setEditingItem(item)
     goTo(nextPage)
+  }
+
+  const editWithoutItem =
+    (visiblePage === 'editarPaciente' ||
+      visiblePage === 'editarProfissional' ||
+      visiblePage === 'editarTag' ||
+      visiblePage === 'editarPlano') && !editingItem
+
+  if (visiblePage === 'notFound' || editWithoutItem) {
+    return (
+      <Sidebar active="inicio" onNavigate={goTo}>
+        <NotFoundPage onNavigate={goTo} />
+      </Sidebar>
+    )
   }
 
   return (
