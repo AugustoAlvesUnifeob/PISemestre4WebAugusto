@@ -14,7 +14,14 @@ type AgendamentoApi = {
     pacientes_idpacientes: number
     datahora: string
     doutor_iddoutor: number
+    servico_idservico: number | null
     status: string
+}
+
+type ServicoApi = {
+    idservico: number
+    nome: string
+    preco: number
 }
 
 type PessoaApi = {
@@ -35,6 +42,8 @@ type ConsultaSelecionada = {
     pacienteTelefone?: string
     pacienteEmail?: string
     doutorNome: string
+    servicoNome: string
+    servicoPreco?: number
     status: string
 }
 
@@ -122,10 +131,11 @@ export function Agenda({ permitirNavegacao = false }: { permitirNavegacao?: bool
             const headers: Record<string, string> = token
                 ? { Authorization: `Bearer ${token}` }
                 : {}
-            const [agendaResponse, pacientesResponse, doutoresResponse] = await Promise.all([
+            const [agendaResponse, pacientesResponse, doutoresResponse, servicosResponse] = await Promise.all([
                 fetch(`${API_URL}/agenda`, { headers }),
                 fetch(`${API_URL}/pacientes/listarByCNPJ`, { headers }),
                 fetch(`${API_URL}/doutores/listarByCNPJ`, { headers }),
+                fetch(`${API_URL}/servicos`, { headers }),
             ])
             const agendaData = await readResponse(agendaResponse) as {
                 agendamentos?: AgendamentoApi[]
@@ -143,16 +153,30 @@ export function Agenda({ permitirNavegacao = false }: { permitirNavegacao?: bool
             const doutoresData: { doutores: PessoaApi[] } = doutoresResponse.ok
                 ? await doutoresResponse.json()
                 : { doutores: [] }
+            const servicosData: { servicos: ServicoApi[] } = servicosResponse.ok
+                ? await servicosResponse.json()
+                : { servicos: [] }
             const pacientesPorId = new Map(pacientesData.pacientes.map(paciente => [
                 paciente.idpacientes!,
                 { nome: paciente.nome, telefone: paciente.telefone, email: paciente.email },
             ]))
             const nomesDoutores = new Map(doutoresData.doutores.map(doutor => [doutor.iddoutor!, doutor.nome]))
+            const servicosPorId = new Map(servicosData.servicos.map(servico => [
+                servico.idservico,
+                { nome: servico.nome, preco: Number(servico.preco) },
+            ]))
 
             setEventos(agendaData.agendamentos.map((agendamento) => {
                 const paciente = pacientesPorId.get(agendamento.pacientes_idpacientes)
                 const pacienteNome = paciente?.nome ?? `Paciente #${agendamento.pacientes_idpacientes}`
                 const doutorNome = nomesDoutores.get(agendamento.doutor_iddoutor) ?? `Doutor #${agendamento.doutor_iddoutor}`
+                const servico = agendamento.servico_idservico == null
+                    ? undefined
+                    : servicosPorId.get(agendamento.servico_idservico)
+                const servicoNome = servico?.nome
+                    ?? (agendamento.servico_idservico == null
+                        ? 'Serviço não informado'
+                        : `Serviço #${agendamento.servico_idservico}`)
                 const corDoutor = obterCorDoutor(agendamento.doutor_iddoutor)
                 return {
                     id: String(agendamento.idagenda),
@@ -167,6 +191,8 @@ export function Agenda({ permitirNavegacao = false }: { permitirNavegacao?: bool
                         pacienteTelefone: paciente?.telefone,
                         pacienteEmail: paciente?.email,
                         doutorNome,
+                        servicoNome,
+                        servicoPreco: servico?.preco,
                         status: agendamento.status,
                     },
                 }
@@ -179,7 +205,7 @@ export function Agenda({ permitirNavegacao = false }: { permitirNavegacao?: bool
 
     // quando a pessoa clica em um evento(agendamento)
     function handleEventClick(info: EventClickArg) {
-        const detalhes = info.event.extendedProps as Pick<ConsultaSelecionada, 'pacienteId' | 'doutorId' | 'pacienteNome' | 'pacienteTelefone' | 'pacienteEmail' | 'doutorNome' | 'status'>
+        const detalhes = info.event.extendedProps as Pick<ConsultaSelecionada, 'pacienteId' | 'doutorId' | 'pacienteNome' | 'pacienteTelefone' | 'pacienteEmail' | 'doutorNome' | 'servicoNome' | 'servicoPreco' | 'status'>
         setEventoSelecionado({
             id: info.event.id,
             titulo: info.event.title,
@@ -229,6 +255,7 @@ export function Agenda({ permitirNavegacao = false }: { permitirNavegacao?: bool
                         <div className="flex min-w-0 flex-col overflow-hidden px-1 py-0.5 text-xs leading-tight">
                             <span className="truncate font-semibold">{info.event.extendedProps.pacienteNome}</span>
                             <span className="truncate opacity-90">{info.event.extendedProps.doutorNome}</span>
+                            <span className="truncate opacity-90">{info.event.extendedProps.servicoNome}</span>
                         </div>
                     )}
                 />

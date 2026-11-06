@@ -20,15 +20,23 @@ type PessoaOption = {
   nome: string
 }
 
+type ServicoOption = {
+  idservico: number
+  nome: string
+  preco: number
+}
+
 export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaModalProps) {
   const [pacienteId, setPacienteId] = useState('')
   const [doutorId, setDoutorId] = useState('')
+  const [servicoId, setServicoId] = useState('')
   const [dataHora, setDataHora] = useState('')
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
   const [pacientes, setPacientes] = useState<PessoaOption[]>([])
   const [doutores, setDoutores] = useState<PessoaOption[]>([])
-  const [carregandoPessoas, setCarregandoPessoas] = useState(true)
+  const [servicos, setServicos] = useState<ServicoOption[]>([])
+  const [carregandoOpcoes, setCarregandoOpcoes] = useState(true)
   const [cadastroAberto, setCadastroAberto] = useState<'paciente' | 'profissional' | null>(null)
   const [avisoCadastro, setAvisoCadastro] = useState('')
   const { token, user } = useAuth()
@@ -39,21 +47,24 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
         const headers: Record<string, string> = token
           ? { Authorization: `Bearer ${token}` }
           : {}
-        const [pacientesResponse, doutoresResponse] = await Promise.all([
+        const [pacientesResponse, doutoresResponse, servicosResponse] = await Promise.all([
           fetch(`${API_URL}/pacientes/listarByCNPJ`, { headers }),
           fetch(`${API_URL}/doutores/listarByCNPJ`, { headers }),
+          fetch(`${API_URL}/servicos`, { headers }),
         ])
         const pacientesData = await pacientesResponse.json()
         const doutoresData = await doutoresResponse.json()
-        if (!pacientesResponse.ok || !doutoresResponse.ok) {
-          throw new Error(pacientesData.message || doutoresData.message || 'Não foi possível carregar pacientes e doutores.')
+        const servicosData = await servicosResponse.json()
+        if (!pacientesResponse.ok || !doutoresResponse.ok || !servicosResponse.ok) {
+          throw new Error(pacientesData.message || doutoresData.message || servicosData.message || 'Não foi possível carregar pacientes, profissionais e serviços.')
         }
         setPacientes(pacientesData.pacientes ?? [])
         setDoutores(doutoresData.doutores ?? [])
+        setServicos(servicosData.servicos ?? [])
       } catch (error) {
-        setErro(error instanceof Error ? error.message : 'Não foi possível carregar pacientes e doutores.')
+        setErro(error instanceof Error ? error.message : 'Não foi possível carregar pacientes, profissionais e serviços.')
       } finally {
-        setCarregandoPessoas(false)
+        setCarregandoOpcoes(false)
       }
     }
 
@@ -62,7 +73,7 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
 
   async function handleCadastroConcluido(tipo: 'paciente' | 'profissional', values: Record<string, string>) {
     setCadastroAberto(null)
-    setCarregandoPessoas(true)
+    setCarregandoOpcoes(true)
     setErro('')
     try {
       const headers: Record<string, string> = token
@@ -97,7 +108,7 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
         ? `Cadastro realizado, mas não foi possível atualizar a lista: ${error.message}`
         : 'Cadastro realizado, mas não foi possível atualizar a lista.')
     } finally {
-      setCarregandoPessoas(false)
+      setCarregandoOpcoes(false)
     }
   }
 
@@ -105,8 +116,8 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
     event.preventDefault()
     setErro('')
 
-    if (!pacienteId || !doutorId) {
-      setErro('Selecione um paciente e um profissional da lista.')
+    if (!pacienteId || !doutorId || !servicoId) {
+      setErro('Selecione um paciente, um profissional e um serviço.')
       return
     }
 
@@ -126,6 +137,7 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
         body: JSON.stringify({
           pacientes_idpacientes: Number(pacienteId),
           doutor_iddoutor: Number(doutorId),
+          servico_idservico: Number(servicoId),
           datahora: dataHoraUtc,
           clinica_cnpj: user.clinica_cnpj,
         })
@@ -201,7 +213,7 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
             label="Paciente"
             createLabel="Cadastrar novo paciente"
             onCreate={() => { setAvisoCadastro(''); setCadastroAberto('paciente') }}
-            loading={carregandoPessoas}
+            loading={carregandoOpcoes}
             options={pacientes.map((paciente) => ({ id: paciente.idpacientes!, nome: paciente.nome }))}
             placeholder="Buscar paciente pelo nome"
             value={pacienteId}
@@ -212,12 +224,35 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
             label="Doutor(a)"
             createLabel="Cadastrar novo profissional"
             onCreate={() => { setAvisoCadastro(''); setCadastroAberto('profissional') }}
-            loading={carregandoPessoas}
+            loading={carregandoOpcoes}
             options={doutores.map((doutor) => ({ id: doutor.iddoutor!, nome: doutor.nome }))}
             placeholder="Buscar doutor pelo nome"
             value={doutorId}
             onChange={setDoutorId}
           />
+          <div className="space-y-1">
+            <label className="block text-sm text-gray-600" htmlFor="consulta-servico">Serviço</label>
+            <select
+              className="w-full rounded-lg border border-gray-300 px-3 py-3 text-sm focus:border-[#4f7161] focus:outline-none focus:ring-2 focus:ring-[#4f7161]/20"
+              id="consulta-servico"
+              required
+              value={servicoId}
+              onChange={(event) => setServicoId(event.target.value)}
+              disabled={carregandoOpcoes || servicos.length === 0}
+            >
+              <option value="">
+                {carregandoOpcoes ? 'Carregando serviços...' : 'Selecione um serviço'}
+              </option>
+              {servicos.map((servico) => (
+                <option key={servico.idservico} value={servico.idservico}>
+                  {servico.nome} — R$ {Number(servico.preco).toFixed(2)}
+                </option>
+              ))}
+            </select>
+            {!carregandoOpcoes && servicos.length === 0 && (
+              <p className="text-xs text-red-700">Cadastre um serviço antes de agendar uma consulta.</p>
+            )}
+          </div>
           <div className="space-y-1">
             <label className="block text-sm text-gray-600" htmlFor="consulta-data">Data e Hora</label>
             <input
@@ -240,7 +275,7 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar }: NovaConsultaMo
             </button>
             <button
               className="rounded-lg bg-[#4f7161] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#3f5c4f] disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={salvando || carregandoPessoas || pacientes.length === 0 || doutores.length === 0}
+              disabled={salvando || carregandoOpcoes || pacientes.length === 0 || doutores.length === 0 || servicos.length === 0}
               type="submit"
             >
               {salvando ? 'Salvando...' : 'Salvar consulta'}

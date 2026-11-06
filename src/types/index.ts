@@ -8,18 +8,22 @@ export type Page =
   | 'profissionais'
   | 'tags'
   | 'planos'
+  | 'servicos'
   | 'cadastroUsuario'
   | 'cadastroPaciente'
   | 'cadastroProfissional'
   | 'cadastroTag'
   | 'cadastroPlano'
+  | 'cadastroServico'
   | 'editarPaciente'
   | 'editarProfissional'
   | 'editarTag'
   | 'editarPlano'
+  | 'editarServico'
   | 'receita'
   | 'atestado'
   | 'laudo'
+  | 'financeiro'
   | 'editarUsuario'
 
 export type RecordItem = {
@@ -61,7 +65,13 @@ export type PlanoItem = {
   exonera?: boolean
 }
 
-export type EditingItem = RecordItem | TagItem | PlanoItem
+export type ServicoItem = {
+  idservico: number
+  nome: string
+  preco: number
+}
+
+export type EditingItem = RecordItem | TagItem | PlanoItem | ServicoItem
 
 export type SelectOption = { label: string; value: string }
 
@@ -71,7 +81,7 @@ export type EntityFieldConfig = {
     optional?: boolean
   } & (
   | {
-    type?: 'text' | 'email' | 'password' | 'number' | 'textarea'
+    type?: 'text' | 'email' | 'password' | 'number' | 'date' | 'textarea'
   }
   | {
     label: string

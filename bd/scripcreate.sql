@@ -28,10 +28,26 @@ USE `easyclinic`;
 -- =====================================================
 
 CREATE TABLE `clinica` (
-    `cnpj` VARCHAR(14) NOT NULL,
+    `cnpj` INT NOT NULL auto_increment,
     `nome` VARCHAR(45) NOT NULL,
 
     PRIMARY KEY (`cnpj`)
+) ENGINE = InnoDB;
+
+CREATE TABLE `servicos` (
+    `idservico` INT NOT NULL AUTO_INCREMENT,
+    `nome` VARCHAR(45) NOT NULL,
+    `preco` float not null,
+    `clinica_cnpj` VARCHAR(14) NOT NULL,
+
+    PRIMARY KEY (`idservico`),
+    INDEX `fk_servico_clinica1_idx` (`clinica_cnpj`),
+
+    CONSTRAINT `fk_servico_clinica1`
+        FOREIGN KEY (`clinica_cnpj`)
+        REFERENCES `clinica` (`cnpj`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION
 ) ENGINE = InnoDB;
 
 -- =====================================================
@@ -163,17 +179,25 @@ CREATE TABLE `agenda` (
     `datahora` DATETIME NOT NULL,
     `doutor_iddoutor` INT NOT NULL,
     `pacientes_idpacientes` INT NOT NULL,
+    `servico_idservico` INT NOT NULL,
     `clinica_cnpj` VARCHAR(14) NOT NULL,
 
     PRIMARY KEY (`idagenda`),
 
     INDEX `fk_agenda_doutor1_idx` (`doutor_iddoutor`),
+    INDEX `fk_agenda_servico1_idx` (`servico_idservico`),
     INDEX `fk_agenda_pacientes1_idx` (`pacientes_idpacientes`),
     INDEX `fk_agenda_clinica1_idx` (`clinica_cnpj`),
 
     CONSTRAINT `fk_agenda_doutor1`
         FOREIGN KEY (`doutor_iddoutor`)
         REFERENCES `doutor` (`iddoutor`)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION,
+	
+    CONSTRAINT `fk_agenda_servico1`
+        FOREIGN KEY (`servico_idservico`)
+        REFERENCES `servicos` (`idservico`)
         ON DELETE NO ACTION
         ON UPDATE NO ACTION,
 
