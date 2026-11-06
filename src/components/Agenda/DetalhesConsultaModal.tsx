@@ -12,6 +12,8 @@ type DetalhesConsultaModalProps = {
     pacienteTelefone?: string
     pacienteEmail?: string
     doutorNome: string
+    servicoNome: string
+    servicoPreco?: number
     inicio: Date
     status?: string
   }
@@ -81,6 +83,13 @@ export default function DetalhesConsultaModal({ consulta, aoFechar, aoExcluir }:
           <div>
             <dt className="text-gray-500">Doutor(a)</dt>
             <dd className="font-semibold text-gray-800">{consulta.doutorNome}</dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Serviço</dt>
+            <dd className="font-semibold text-gray-800">
+              {consulta.servicoNome}
+              {consulta.servicoPreco !== undefined && ` — R$ ${consulta.servicoPreco.toFixed(2)}`}
+            </dd>
           </div>
           <div>
             <dt className="text-gray-500">Data e hora</dt>

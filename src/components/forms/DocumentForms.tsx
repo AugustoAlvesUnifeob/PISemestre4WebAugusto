@@ -155,3 +155,23 @@ export function LaudoForm(props: FormProps) {
     />
   )
 }
+
+export function FinanceiroForm({ onNavigate, onNotice, notice }: FormProps) {
+  return (
+    <EntityForm
+      title="Gerar Documento Financeiro"
+      back="inicio"
+      active="financeiro"
+      endpoint="/documentos/financeiro"
+      downloadPdf
+      onNavigate={onNavigate}
+      onNotice={onNotice}
+      notice={notice}
+      submitLabel="Gerar PDF"
+      fields={[
+        { label: 'Data inicial', name: 'dataInicio', type: 'date' },
+        { label: 'Data final', name: 'dataFim', type: 'date' },
+      ]}
+    />
+  )
+}

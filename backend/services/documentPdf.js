@@ -162,4 +162,132 @@ function generateLaudoPdf({ clinic, patient, doctor, laudo }) {
     })
 }
 
-module.exports = { generatePrescriptionPdf, generateAtestadoPdf, generateLaudoPdf }
+function generateFinancialPdf({ clinic, dataInicio, dataFim, rows, totalPeriodo }) {
+    return new Promise((resolve, reject) => {
+        const margin = 40
+        const pdf = new PDFDocument({ size: 'A4', margin })
+        const chunks = []
+        const columns = [
+            { label: 'Paciente', width: 78 },
+            { label: 'Plano', width: 68 },
+            { label: 'Desconto', width: 58 },
+            { label: 'Serviço (qtd.)', width: 90 },
+            { label: 'Preço', width: 62 },
+            { label: 'Aplicado', width: 68 },
+            { label: 'Total período', width: 91 }
+        ]
+        const formatCurrency = value => new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        }).format(value)
+        const formatDate = value => new Intl.DateTimeFormat('pt-BR', {
+            timeZone: 'UTC'
+        }).format(new Date(`${value}T00:00:00.000Z`))
+
+        pdf.on('data', chunk => chunks.push(chunk))
+        pdf.on('end', () => resolve(Buffer.concat(chunks)))
+        pdf.on('error', reject)
+
+        pdf.info.Title = 'Relatório financeiro'
+        pdf.info.Author = clinic.nome
+
+        function drawHeader() {
+            pdf.font('Helvetica-Bold').fontSize(16).text(clinic.nome, margin, margin, {
+                width: pdf.page.width - margin * 2,
+                align: 'center'
+            })
+            pdf.font('Helvetica').fontSize(9).text(`CNPJ: ${clinic.cnpj}`, {
+                align: 'center'
+            })
+            pdf.moveDown()
+            pdf.font('Helvetica-Bold').fontSize(13).text('RELATÓRIO FINANCEIRO', {
+                align: 'center'
+            })
+            pdf.moveDown(0.5)
+            pdf.font('Helvetica').fontSize(9).text(
+                `Período: ${formatDate(dataInicio)} a ${formatDate(dataFim)}`,
+                { align: 'center' }
+            )
+            pdf.fontSize(8).fillColor('#666666').text(
+                'Cálculo baseado nos preços e planos atuais.',
+                { align: 'center' }
+            )
+            pdf.fillColor('#222222').moveDown(1.5)
+        }
+
+        function drawTableHeader() {
+            const y = pdf.y
+            let x = margin
+            pdf.font('Helvetica-Bold').fontSize(7)
+            for (const column of columns) {
+                pdf.text(column.label, x + 3, y, { width: column.width - 6 })
+                x += column.width
+            }
+            pdf.moveTo(margin, pdf.y + 3).lineTo(pdf.page.width - margin, pdf.y + 3)
+                .strokeColor('#4f7161').stroke()
+            pdf.y += 9
+        }
+
+        drawHeader()
+        drawTableHeader()
+
+        if (!rows.length) {
+            pdf.moveDown()
+            pdf.fontSize(10).text('Nenhum agendamento encontrado neste período.', {
+                align: 'center'
+            })
+        } else {
+            for (const row of rows) {
+                const values = [
+                    row.nome,
+                    row.plano,
+                    row.desconto,
+                    `${row.servico} (${row.quantidade})`,
+                    formatCurrency(row.preco),
+                    formatCurrency(row.precoAplicado),
+                    formatCurrency(row.totalPeriodo)
+                ]
+                const rowHeight = Math.max(...values.map((value, index) =>
+                    pdf.heightOfString(value, {
+                        width: columns[index].width - 6,
+                        font: 'Helvetica',
+                        fontSize: 7
+                    })
+                )) + 8
+                if (pdf.y + rowHeight > pdf.page.height - margin - 24) {
+                    pdf.addPage()
+                    drawHeader()
+                    drawTableHeader()
+                }
+
+                const y = pdf.y
+                let x = margin
+                pdf.fillColor('#222222').font('Helvetica').fontSize(7)
+                values.forEach((value, index) => {
+                    pdf.text(value, x + 3, y + 3, {
+                        width: columns[index].width - 6
+                    })
+                    x += columns[index].width
+                })
+                pdf.y = y + rowHeight
+                pdf.moveTo(margin, pdf.y).lineTo(pdf.page.width - margin, pdf.y)
+                    .strokeColor('#dfe7e2').stroke()
+                pdf.y += 3
+            }
+        }
+
+        if (pdf.y + 30 > pdf.page.height - margin) pdf.addPage()
+        pdf.moveDown()
+        pdf.font('Helvetica-Bold').fontSize(11)
+            .text(`TOTAL FINAL DO PERÍODO: ${formatCurrency(totalPeriodo)}`, { align: 'right' })
+
+        pdf.end()
+    })
+}
+
+module.exports = {
+    generatePrescriptionPdf,
+    generateAtestadoPdf,
+    generateLaudoPdf,
+    generateFinancialPdf
+}

@@ -22,6 +22,10 @@ const Agenda = conn.define('agenda',{
         type: DataTypes.INTEGER,
         required: true
     },
+    servico_idservico:{
+        type: DataTypes.INTEGER,
+        required: true
+    },
     clinica_cnpj:{
         type: DataTypes.STRING,
         required: true

@@ -10,6 +10,7 @@ import type {
   RecordItem,
   TagItem,
   PlanoItem,
+  ServicoItem,
   EditingItem
 } from './types'
 
@@ -21,13 +22,15 @@ import { EditUserPage } from './pages/EditUserPage'
 import { RecordsPage } from './pages/RecordsPage'
 import { TagsPage } from './pages/TagsPage'
 import { PlanosPage } from './pages/PlanosPage'
+import { ServicosPage } from './pages/ServicosPage'
 
 import { PatientForm } from './components/forms/PatientForm'
 import { ProfessionalForm } from './components/forms/ProfessionalForm'
 import { TagForm } from './components/forms/TagForm'
 import { PlanoForm } from './components/forms/PlanoForm'
+import { ServicoForm } from './components/forms/ServicoForm'
 import { UsuarioForm } from './components/forms/UsuarioForm'
-import { ReceitaForm, AtestadoForm, LaudoForm } from './components/forms/DocumentForms'
+import { ReceitaForm, AtestadoForm, LaudoForm, FinanceiroForm } from './components/forms/DocumentForms'
 
 const protectedPages: Page[] = [
   'inicio',
@@ -36,18 +39,22 @@ const protectedPages: Page[] = [
   'profissionais',
   'tags',
   'planos',
+  'servicos',
   'cadastroUsuario',
   'cadastroPaciente',
   'cadastroProfissional',
   'cadastroTag',
   'cadastroPlano',
+  'cadastroServico',
   'editarPaciente',
   'editarProfissional',
   'editarTag',
   'editarPlano',
+  'editarServico',
   'receita',
   'atestado',
   'laudo',
+  'financeiro',
   'editarUsuario'
 ]
 
@@ -140,6 +147,13 @@ function App() {
       {visiblePage === 'editarPlano' && editingItem && (
         <PlanoForm onNavigate={goTo} onNotice={setNotice} notice={notice} item={editingItem as PlanoItem} />
       )}
+      {visiblePage === 'servicos' && <ServicosPage onNavigate={goTo} onEdit={(item) => beginEdit('editarServico', item)} />}
+      {visiblePage === 'cadastroServico' && (
+        <ServicoForm onNavigate={goTo} onNotice={setNotice} notice={notice} />
+      )}
+      {visiblePage === 'editarServico' && editingItem && (
+        <ServicoForm onNavigate={goTo} onNotice={setNotice} notice={notice} item={editingItem as ServicoItem} />
+      )}
       {visiblePage === 'receita' && (
         <ReceitaForm onNavigate={goTo} onNotice={setNotice} notice={notice} />
       )}
@@ -148,6 +162,9 @@ function App() {
       )}
       {visiblePage === 'laudo' && (
         <LaudoForm onNavigate={goTo} onNotice={setNotice} notice={notice} />
+      )}
+      {visiblePage === 'financeiro' && (
+        <FinanceiroForm onNavigate={goTo} onNotice={setNotice} notice={notice} />
       )}
     </>
   )

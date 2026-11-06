@@ -1,6 +1,7 @@
 import type { Page } from '../types'
 import { Sidebar } from '../components/Sidebar/Sidebar'
 import { Agenda } from '../components/Agenda/AgendaWidget'
+import { MovimentoPlanos } from '../components/Dashboard/MovimentoPlanos'
 
 export function Dashboard({ onNavigate }: { onNavigate: (page: Page) => void }) {
   return (
@@ -17,27 +18,12 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: Page) => void }) 
           </div>
         </section>
 
-        {/*<section>
+        <section>
           <h2 className="mb-4 rounded-lg bg-[#5f846e] px-4 py-3 text-sm font-bold text-white">
             MOVIMENTO
           </h2>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {indicators.map((indicator) => (
-              <article key={indicator} className="rounded-lg bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
-                <h3 className="mb-3 text-sm font-semibold text-[#4f7161]">{indicator}</h3>
-                <div
-                  className="flex h-36 items-center justify-center rounded border border-[#e1e8e3] text-center text-sm text-gray-500"
-                  style={{
-                    backgroundImage: 'linear-gradient(#e8ede9 1px, transparent 1px), linear-gradient(90deg, #e8ede9 1px, transparent 1px)',
-                    backgroundSize: '100% 25%, 20% 100%',
-                  }}
-                >
-                  <span className="bg-white/90 px-3 py-1">Sem dados disponíveis</span>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>*/}
+          <MovimentoPlanos />
+        </section>
 
       </div>
     </Sidebar>

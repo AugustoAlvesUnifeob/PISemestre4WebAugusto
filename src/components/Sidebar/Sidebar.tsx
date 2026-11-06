@@ -2,10 +2,11 @@ import { useAuth } from '../../context/AuthContext'
 import { useState } from 'react'
 import type { Page } from '../../types'
 
-const documentLinks: { label: string; page: 'receita' | 'atestado' | 'laudo' }[] = [
+const documentLinks: { label: string; page: 'receita' | 'atestado' | 'laudo' | 'financeiro' }[] = [
     { label: 'Receita', page: 'receita' },
     { label: 'Atestado', page: 'atestado' },
     { label: 'Laudo', page: 'laudo' },
+    { label: 'Financeiro', page: 'financeiro' },
 ]
 
 export function Sidebar({
@@ -92,6 +93,13 @@ export function Sidebar({
                         Planos
                         </li>
 
+                        <li
+                        className={`cursor-pointer rounded-full px-3 py-2 transition hover:bg-[#edf4f0] md:mb-4 ${active === 'servicos' ? 'bg-[#edf4f0] font-bold text-[#27463b]' : 'text-[#2d2d2d]'}`}
+                        onClick={() => onNavigate('servicos')}
+                        >
+                        Serviços
+                        </li>
+
                         {user?.tipo === 1 && (
                             <li
                                 className={`cursor-pointer rounded-full px-3 py-2 transition hover:bg-[#edf4f0] md:mb-4 ${
@@ -112,7 +120,7 @@ export function Sidebar({
                                 aria-controls="sidebar-documents-menu"
                                 onClick={() => setDocumentsOpen(!documentsOpen)}
                                 className={`flex w-full cursor-pointer items-center justify-between rounded-full px-3 py-2 text-left transition hover:bg-[#edf4f0] ${
-                                    active === 'receita' || active === 'atestado' || active === 'laudo'
+                                    active === 'receita' || active === 'atestado' || active === 'laudo' || active === 'financeiro'
                                         ? 'bg-[#edf4f0] font-bold text-[#27463b]'
                                         : 'text-[#2d2d2d]'
                                 }`}
