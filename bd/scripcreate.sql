@@ -38,7 +38,7 @@ CREATE TABLE `servicos` (
     `idservico` INT NOT NULL AUTO_INCREMENT,
     `nome` VARCHAR(45) NOT NULL,
     `preco` float not null,
-    `clinica_cnpj` VARCHAR(14) NOT NULL,
+    `clinica_cnpj` INT NOT NULL,
 
     PRIMARY KEY (`idservico`),
     INDEX `fk_servico_clinica1_idx` (`clinica_cnpj`),
@@ -57,7 +57,7 @@ CREATE TABLE `servicos` (
 CREATE TABLE `tag` (
     `idtag` INT NOT NULL auto_increment,
     `descricao` VARCHAR(45) NOT NULL,
-    `clinica_cnpj` VARCHAR(14) NOT NULL,
+    `clinica_cnpj` INT NOT NULL,
 
     PRIMARY KEY (`idtag`),
 
@@ -80,7 +80,7 @@ CREATE TABLE `plano` (
     `aplicadesconto` TINYINT NOT NULL,
     `valordesconto` FLOAT NOT NULL,
     `exonera` TINYINT NOT NULL,
-    `clinica_cnpj` VARCHAR(14) NOT NULL,
+    `clinica_cnpj` INT NOT NULL,
 
     PRIMARY KEY (`idplano`),
 
@@ -105,7 +105,7 @@ CREATE TABLE `pacientes` (
     `email` VARCHAR(45) NOT NULL,
     `complemento` VARCHAR(45) NULL,
     `plano_idplano` INT NOT NULL,
-    `clinica_cnpj` VARCHAR(14) NOT NULL,
+    `clinica_cnpj` INT NOT NULL,
 
     PRIMARY KEY (`idpacientes`),
 
@@ -135,7 +135,7 @@ CREATE TABLE `usuario` (
     `email` VARCHAR(45) NOT NULL,
     `senha` VARCHAR(255) NOT NULL,
     `tipo` TINYINT NOT NULL,
-    `clinica_cnpj` VARCHAR(14) NOT NULL,
+    `clinica_cnpj` INT NOT NULL,
 
     PRIMARY KEY (`idusuario`),
 
@@ -157,7 +157,7 @@ CREATE TABLE `doutor` (
     `nome` VARCHAR(45) NOT NULL,
     `especialidade` VARCHAR(45) NOT NULL,
     `clinica_cnpj` VARCHAR(14) NOT NULL,
-    `documento` VARCHAR(20) NOT NULL,
+    `documento` INT NOT NULL,
 
     PRIMARY KEY (`iddoutor`),
 
@@ -180,7 +180,7 @@ CREATE TABLE `agenda` (
     `doutor_iddoutor` INT NOT NULL,
     `pacientes_idpacientes` INT NOT NULL,
     `servico_idservico` INT NOT NULL,
-    `clinica_cnpj` VARCHAR(14) NOT NULL,
+    `clinica_cnpj` INT NOT NULL,
 
     PRIMARY KEY (`idagenda`),
 
