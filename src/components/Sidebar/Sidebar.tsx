@@ -1,8 +1,12 @@
 import { useAuth } from '../../context/AuthContext'
 import { useState } from 'react'
 import type { Page } from '../../types'
+import { useTutorial } from '../Tutorial/GuidedTour'
 
-const documentLinks: { label: string; page: 'receita' | 'atestado' | 'laudo' | 'financeiro' }[] = [
+const documentLinks: {
+    label: string
+    page: 'receita' | 'atestado' | 'laudo' | 'financeiro'
+}[] = [
     { label: 'Receita', page: 'receita' },
     { label: 'Atestado', page: 'atestado' },
     { label: 'Laudo', page: 'laudo' },
@@ -19,6 +23,7 @@ export function Sidebar({
         children: React.ReactNode
     }) {
         const { user, logout } = useAuth()
+        const tutorial = useTutorial()
         const [documentsOpen, setDocumentsOpen] = useState(false)
 
         return (
@@ -37,6 +42,7 @@ export function Sidebar({
 
                         <button
                             //Nao está implementado isso ainda
+                            data-tour="menu-editar-usuario"
                             onClick={() => onNavigate('editarUsuario')}
                             className="cursor-pointer"
                             title="Editar usuário"
@@ -46,11 +52,15 @@ export function Sidebar({
                     </div>
                 </div>
 
-                <nav className="bg-white px-4 py-5 md:min-h-0 md:flex-1 md:overflow-y-auto">
+                <nav
+                    data-tour="menu-lateral"
+                    className="bg-white px-4 py-5 md:min-h-0 md:flex-1 md:overflow-y-auto"
+                >
                     <ul className="flex flex-wrap gap-x-5 gap-y-3 md:block">
-                        
+
                         <li
                         className={`cursor-pointer rounded-full px-3 py-2 transition hover:bg-[#edf4f0] md:mb-4 ${active === 'inicio' ? 'bg-[#edf4f0] font-bold text-[#27463b]' : 'text-[#2d2d2d]'}`}
+                        data-tour="menu-inicio"
                         onClick={() => onNavigate('inicio')}
                         >
                         Início
@@ -58,13 +68,15 @@ export function Sidebar({
 
                         <li
                         className={`cursor-pointer rounded-full px-3 py-2 transition hover:bg-[#edf4f0] md:mb-4 ${active === 'agendamentos' ? 'bg-[#edf4f0] font-bold text-[#27463b]' : 'text-[#2d2d2d]'}`}
+                        data-tour="menu-agendamentos"
                         onClick={() => onNavigate('agendamentos')}
                         >
                         Agendamentos
                         </li>
-                        
+
                         <li
                         className={`cursor-pointer rounded-full px-3 py-2 transition hover:bg-[#edf4f0] md:mb-4 ${active === 'pacientes' ? 'bg-[#edf4f0] font-bold text-[#27463b]' : 'text-[#2d2d2d]'}`}
+                        data-tour="menu-pacientes"
                         onClick={() => onNavigate('pacientes')}
                         >
                         Pacientes
@@ -72,6 +84,7 @@ export function Sidebar({
 
                         <li
                         className={`cursor-pointer rounded-full px-3 py-2 transition hover:bg-[#edf4f0] ${active === 'profissionais' ? 'bg-[#edf4f0] font-bold text-[#27463b]' : 'text-[#2d2d2d]'}`}
+                        data-tour="menu-profissionais"
                         onClick={() => onNavigate('profissionais')}
                         >
                         Profissionais
@@ -79,8 +92,9 @@ export function Sidebar({
 
                         <div className="my-4 h-px bg-[#dfe7e2]" />
 
-                        <li 
+                        <li
                         className={`cursor-pointer rounded-full px-3 py-2 transition hover:bg-[#edf4f0] md:mb-4 ${active === 'tags' ? 'bg-[#edf4f0] font-bold text-[#27463b]' : 'text-[#2d2d2d]'}`}
+                        data-tour="menu-tags"
                         onClick={() => onNavigate('tags')}
                         >
                         Tags
@@ -88,6 +102,7 @@ export function Sidebar({
 
                         <li
                         className={`cursor-pointer rounded-full px-3 py-2 transition hover:bg-[#edf4f0] md:mb-4 ${active === 'planos' ? 'bg-[#edf4f0] font-bold text-[#27463b]' : 'text-[#2d2d2d]'}`}
+                        data-tour="menu-planos"
                         onClick={() => onNavigate('planos')}
                         >
                         Planos
@@ -95,6 +110,7 @@ export function Sidebar({
 
                         <li
                         className={`cursor-pointer rounded-full px-3 py-2 transition hover:bg-[#edf4f0] md:mb-4 ${active === 'servicos' ? 'bg-[#edf4f0] font-bold text-[#27463b]' : 'text-[#2d2d2d]'}`}
+                        data-tour="menu-servicos"
                         onClick={() => onNavigate('servicos')}
                         >
                         Serviços
@@ -107,6 +123,7 @@ export function Sidebar({
                                         ? 'bg-[#edf4f0] font-bold text-[#27463b]'
                                         : 'text-[#2d2d2d]'
                                 }`}
+                                data-tour="menu-cadastro-usuario"
                                 onClick={() => onNavigate('cadastroUsuario')}
                             >
                                 Cadastrar usuário
@@ -117,6 +134,7 @@ export function Sidebar({
                             <button
                                 type="button"
                                 aria-expanded={documentsOpen}
+                                data-tour="menu-documentos"
                                 aria-controls="sidebar-documents-menu"
                                 onClick={() => setDocumentsOpen(!documentsOpen)}
                                 className={`flex w-full cursor-pointer items-center justify-between rounded-full px-3 py-2 text-left transition hover:bg-[#edf4f0] ${
@@ -137,6 +155,7 @@ export function Sidebar({
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 9-7 7-7-7" />
                                 </svg>
                             </button>
+
                             {documentsOpen && (
                                 <ul
                                     id="sidebar-documents-menu"
@@ -164,13 +183,67 @@ export function Sidebar({
                             )}
                         </li>
 
-                        <li
-                        className="cursor-pointer rounded-full px-3 py-2 text-[#2d2d2d] transition hover:bg-[#edf4f0] md:mt-8"
-                        onClick={logout}
-                        >
-                        Sair
+                        {/* Ajuda disponível em todas as páginas do sistema. */}
+                        <div className="my-4 h-px bg-[#dfe7e2]" />
+
+                        <li>
+                            <button
+                                data-tour="menu-tutorial"
+                                className="flex w-full items-center gap-2 rounded-full px-3 py-2 text-left text-[#2d2d2d] transition hover:bg-[#edf4f0]"
+                                onClick={() => tutorial?.abrirTutorial()}
+                                type="button"
+                            >
+                                <svg
+                                    aria-hidden="true"
+                                    className="h-5 w-5 text-[#4f7161]"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M9.5 9a2.5 2.5 0 1 1 4.5 1.5c-1.2 1-2 1.4-2 3"
+                                    />
+                                    <path strokeLinecap="round" d="M12 17h.01" />
+                                </svg>
+
+                                <span>Como usar o EasyClinic</span>
+                            </button>
                         </li>
 
+                        <li>
+                            <button
+                                data-tour="menu-sair"
+                                className="flex w-full items-center gap-2 rounded-full px-3 py-2 text-left text-[#2d2d2d] transition hover:bg-[#edf4f0]"
+                                onClick={logout}
+                                type="button"
+                            >
+                                <svg
+                                    aria-hidden="true"
+                                    className="h-5 w-5 text-[#4f7161]"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"
+                                    />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M16 17l5-5-5-5M21 12H9"
+                                    />
+                                </svg>
+
+                                <span>Sair</span>
+                            </button>
+                        </li>
 
                     </ul>
                 </nav>
@@ -181,5 +254,4 @@ export function Sidebar({
 
             </div>
         )
-
 }
