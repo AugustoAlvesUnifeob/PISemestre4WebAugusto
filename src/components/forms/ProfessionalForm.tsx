@@ -6,7 +6,8 @@ export function ProfessionalForm({
 }: FormProps & {
   item?: RecordItem
   embedded?: boolean
-  onSaved?: (values: Record<string, string>) => void
+  //onSaved?: (values: Record<string, string>) => void
+  onSaved?: (values: Record<string, string>, created?: Record<string, unknown>) => void
   onCancel?: () => void
 }) {
   return (

@@ -7,9 +7,25 @@ import interactionPlugin from '@fullcalendar/interaction'
 import NovaConsultaModal from './NovaConsultaModal'
 import DetalhesConsultaModal from './DetalhesConsultaModal'
 import { useAuth } from '../../context/AuthContext'
-import { API_URL, messageFrom, readResponse } from '../../services/api'
+import { API_URL, fetchWithToken, messageFrom, readResponse } from '../../services/api'
+
 
 type AgendamentoApi = {
+    idagenda: number
+    pacientes_idpacientes: number
+    datahora: string
+    doutor_iddoutor: number
+    servico_idservico: number | null
+    status: string
+    paciente_nome: string | null
+    paciente_telefone: string | null
+    paciente_email: string | null
+    doutor_nome: string | null
+    servico_nome: string | null
+    servico_preco: number | null
+}
+
+/* type AgendamentoApi = {
     idagenda: number
     pacientes_idpacientes: number
     datahora: string
@@ -30,7 +46,7 @@ type PessoaApi = {
     nome: string
     telefone?: string
     email?: string
-}
+} */
 
 type ConsultaSelecionada = {
     id: string
@@ -139,7 +155,7 @@ export function Agenda({
         buscarAgendamentos()
     }, [])
 
-    async function buscarAgendamentos() {
+    /* async function buscarAgendamentos() {
         setErroAgenda('')
 
         try {
@@ -248,6 +264,67 @@ export function Agenda({
                         doutorNome,
                         servicoNome,
                         servicoPreco: servico?.preco,
+                        status: agendamento.status,
+                    },
+                }
+            }))
+        } catch (error) {
+            setEventos([])
+            setErroAgenda(
+                error instanceof Error
+                    ? error.message
+                    : 'Não foi possível carregar os agendamentos.'
+            )
+        }
+    } */
+
+     async function buscarAgendamentos() {
+        setErroAgenda('')
+
+        try {
+            const agendaResponse = await fetchWithToken(`${API_URL}/agenda`)
+            const agendaData = await readResponse(agendaResponse) as {
+                agendamentos?: AgendamentoApi[]
+                message?: string
+                errors?: { msg?: string }[]
+            }
+
+            if (!agendaResponse.ok) {
+                throw new Error(messageFrom(agendaData))
+            }
+
+            if (!Array.isArray(agendaData.agendamentos)) {
+                throw new Error('A API retornou uma lista de agendamentos inválida.')
+            }
+
+            setEventos(agendaData.agendamentos.map((agendamento) => {
+                const pacienteNome = agendamento.paciente_nome
+                    ?? `Paciente #${agendamento.pacientes_idpacientes}`
+                const doutorNome = agendamento.doutor_nome
+                    ?? `Doutor #${agendamento.doutor_iddoutor}`
+                const servicoNome = agendamento.servico_nome
+                    ?? (agendamento.servico_idservico == null
+                        ? 'Serviço não informado'
+                        : `Serviço #${agendamento.servico_idservico}`)
+
+                const corDoutor = obterCorDoutor(agendamento.doutor_iddoutor)
+
+                return {
+                    id: String(agendamento.idagenda),
+                    title: `${pacienteNome} · ${doutorNome}`,
+                    start: parseDataHoraLocal(agendamento.datahora),
+                    backgroundColor: corDoutor,
+                    borderColor: corDoutor,
+                    extendedProps: {
+                        pacienteId: agendamento.pacientes_idpacientes,
+                        doutorId: agendamento.doutor_iddoutor,
+                        servicoId: agendamento.servico_idservico,
+                        pacienteNome,
+                        pacienteTelefone: agendamento.paciente_telefone ?? undefined,
+                        pacienteEmail: agendamento.paciente_email ?? undefined,
+                        doutorNome,
+                        servicoNome,
+                        servicoPreco: agendamento.servico_preco ?? undefined,
                         status: agendamento.status,
                     },
                 }

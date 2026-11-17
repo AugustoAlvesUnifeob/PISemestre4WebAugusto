@@ -34,7 +34,8 @@ export function EntityForm({
   initialValues?: Record<string, string | number | boolean | number[] | undefined>
   submitLabel?: string
   embedded?: boolean
-  onSaved?: (values: Record<string, string>) => void
+  //onSaved?: (values: Record<string, string>) => void
+  onSaved?: (values: Record<string, string>, created?: Record<string, unknown>) => void
   onCancel?: () => void
   fieldActions?: Record<string, { label: string; onClick: () => void }>
 }) {
@@ -68,7 +69,7 @@ export function EntityForm({
       ]),
     )
 
-    try {
+    /*try {
       if (downloadPdf) {
         await downloadDocumentPdf(endpoint, payload)
         onNotice('PDF gerado e baixado com sucesso!')
@@ -80,6 +81,25 @@ export function EntityForm({
 
       if (onSaved) {
         onSaved(values)
+      } else {
+        onNavigate(back)
+      }
+    } catch (error) {*/
+     
+     try {
+      let created: Record<string, unknown> | undefined
+      if (downloadPdf) {
+        await downloadDocumentPdf(endpoint, payload)
+        onNotice('PDF gerado e baixado com sucesso!')
+      } else {
+        const response = await post(endpoint, payload)
+        if (!response.ok) throw new Error(messageFrom(response.data))
+        created = response.data
+        onNotice('Cadastro realizado com sucesso!')
+      }
+
+      if (onSaved) {
+        onSaved(values, created)
       } else {
         onNavigate(back)
       }

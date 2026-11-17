@@ -87,6 +87,7 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar, consultaEditar }
     carregarPessoas()
   }, [token])
 
+  /*
   async function handleCadastroConcluido(tipo: 'paciente' | 'profissional' | 'servico', values: Record<string, string>) {
     setCadastroAberto(null)
     setCarregandoOpcoes(true)
@@ -136,6 +137,41 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar, consultaEditar }
         : 'Cadastro realizado, mas não foi possível atualizar a lista.')
     } finally {
       setCarregandoOpcoes(false)
+    }
+  }
+  */
+
+  function handleCadastroConcluido(
+    tipo: 'paciente' | 'profissional' | 'servico',
+    created?: Record<string, unknown>,
+  ) {
+    setCadastroAberto(null)
+    setErro('')
+
+    if (tipo === 'servico') {
+      const novo = created?.servico as ServicoOption | undefined
+      if (!novo?.idservico) {
+        setErro('Serviço cadastrado, mas não foi possível selecioná-lo automaticamente. Selecione-o na lista.')
+        return
+      }
+      setServicos((atual) => [...atual, novo])
+      setServicoId(String(novo.idservico))
+    } else if (tipo === 'paciente') {
+      const novo = created?.paciente as PessoaOption | undefined
+      if (!novo?.idpacientes) {
+        setErro('Paciente cadastrado, mas não foi possível selecioná-lo automaticamente. Selecione-o na busca.')
+        return
+      }
+      setPacientes((atual) => [...atual, novo])
+      setPacienteId(String(novo.idpacientes))
+    } else {
+      const novo = created?.doutor as PessoaOption | undefined
+      if (!novo?.iddoutor) {
+        setErro('Profissional cadastrado, mas não foi possível selecioná-lo automaticamente. Selecione-o na busca.')
+        return
+      }
+      setDoutores((atual) => [...atual, novo])
+      setDoutorId(String(novo.iddoutor))
     }
   }
 
@@ -208,7 +244,8 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar, consultaEditar }
               notice={avisoCadastro}
               embedded
               onCancel={() => setCadastroAberto(null)}
-              onSaved={(values) => { void handleCadastroConcluido('paciente', values) }}
+              //onSaved={(values) => { void handleCadastroConcluido('paciente', values) }}
+              onSaved={(_values, created) => handleCadastroConcluido('paciente', created)}
             />
           ) : cadastroAberto === 'profissional' ? (
             <ProfessionalForm
@@ -217,7 +254,8 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar, consultaEditar }
               notice={avisoCadastro}
               embedded
               onCancel={() => setCadastroAberto(null)}
-              onSaved={(values) => { void handleCadastroConcluido('profissional', values) }}
+              //onSaved={(values) => { void handleCadastroConcluido('profissional', values) }}
+              onSaved={(_values, created) => handleCadastroConcluido('profissional', created)}
             />
           ) : (
             <ServicoForm
@@ -226,7 +264,8 @@ export default function NovaConsultaModal({ aoFechar, aoSalvar, consultaEditar }
               notice={avisoCadastro}
               embedded
               onCancel={() => setCadastroAberto(null)}
-              onSaved={(values) => { void handleCadastroConcluido('servico', values) }}
+              //onSaved={(values) => { void handleCadastroConcluido('servico', values) }}
+              onSaved={(_values, created) => handleCadastroConcluido('servico', created)}
             />
           )}
         </div>
