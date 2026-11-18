@@ -12,13 +12,15 @@ module.exports = class DoutorController{
 
         //criar novo doutor
         try{
-            await Doutor.create({
+            //await Doutor.create({
+            const doutor = await Doutor.create({
                 nome: nome,
                 especialidade: especialidade,
                 clinica_cnpj: clinica_cnpj,
                 documento: documento,
             })
-            res.status(200).json({message:'Doutor(a) Cadastrado com sucesso'})
+            //res.status(200).json({message:'Doutor(a) Cadastrado com sucesso'})
+            res.status(200).json({message:'Doutor(a) Cadastrado com sucesso', doutor})
         }catch(error){
             res.status(500).json({message: error.message})
         }

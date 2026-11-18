@@ -22,7 +22,7 @@ export function Register({ onNavigate, onNotice, notice }: FormProps) {
     event.preventDefault()
     if (values.senha !== values.confirmarSenha)
       return onNotice('As senhas não coincidem!')
-    try {
+    /*try {
       const clinicResponse = await post('/clinicas/register', {
         nome: values.nomeClinica,
         cnpj: values.cnpj,
@@ -40,7 +40,19 @@ export function Register({ onNavigate, onNotice, notice }: FormProps) {
         throw new Error(`Erro no Usuário: ${messageFrom(userResponse.data)}`)
       onNotice('Clínica e Usuário cadastrados com sucesso!')
       onNavigate('login')
-    } catch (error) {
+    } */ 
+        try {
+      const response = await post('/clinicas/register-completo', {
+        cnpj: values.cnpj,
+        nome: values.nomeClinica,
+        usuario: values.usuario,
+        email: values.email,
+        senha: values.senha,
+      })
+      if (!response.ok) throw new Error(messageFrom(response.data))
+      onNotice('Clínica e Usuário cadastrados com sucesso!')
+      onNavigate('login')
+    }  catch (error) {
       onNotice(
         error instanceof Error ? error.message : 'Erro ao realizar cadastro.',
       )

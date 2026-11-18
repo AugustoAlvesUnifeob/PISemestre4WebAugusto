@@ -4,6 +4,7 @@ const verifyToken = require('../helpers/verify-token.js')
 
 route.get('/', verifyToken, AgendaController.listAll)
 route.get('/movimento-por-plano', verifyToken, AgendaController.movimentoPorPlano)
+route.get('/paciente/:idpaciente', verifyToken, AgendaController.historicoPaciente)
 route.post('/', verifyToken, AgendaController.register)
 route.put('/update/:idagenda', verifyToken, AgendaController.update)
 route.delete('/delete/:idagenda', verifyToken, AgendaController.delete)

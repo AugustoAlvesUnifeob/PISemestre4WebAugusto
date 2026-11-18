@@ -16,8 +16,13 @@ const adminRegisterValidationRules = () => [
     body('tipo').isInt({ min: 0, max: 1 }).withMessage('Tipo de usuário inválido'),
 ]
 
-//validação
+//regras do usuário master criado junto com a clínica (o tipo é definido no back).
+const masterRegisterValidationRules = () => [
+    ...registerValidationRules(),
+    body('email').isEmail().withMessage('Informe um e-mail válido'),
+]
 
+//validação
 const validate = (req, res, next) => {
     const erros = validationResult(req)
     if(erros.isEmpty()){
@@ -30,5 +35,6 @@ const validate = (req, res, next) => {
 module.exports = {
     registerValidationRules,
     adminRegisterValidationRules,
+    masterRegisterValidationRules,
     validate
 }

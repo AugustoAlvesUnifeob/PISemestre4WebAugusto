@@ -12,12 +12,14 @@ module.exports = class ServicesController{
 
         //criar novo serviço
         try{
-            await Servicos.create({
+            //await Servicos.create({]
+            const servico = await Servicos.create({
                 nome: nome,
                 preco: preco,
                 clinica_cnpj: clinica_cnpj
             })
-            res.status(200).json({message:'Serviço Cadastrado com sucesso'})
+            //res.status(200).json({message:'Serviço Cadastrado com sucesso'})
+            res.status(200).json({message:'Serviço Cadastrado com sucesso', servico})
         }catch(error){
             res.status(500).json({message: error.message})
         }

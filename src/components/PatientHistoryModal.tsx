@@ -2,14 +2,23 @@ import { useEffect, useState } from 'react'
 import { API_URL, fetchWithToken, messageFrom, readResponse } from '../services/api'
 import iconeHistorico from '../assets/historico-consultas.png'
 
-type AgendamentoApi = {
+/* type AgendamentoApi = {
   idagenda: number
   pacientes_idpacientes: number
   datahora: string
   doutor_iddoutor: number
   servico_idservico: number | null
-}
+} */
 
+type AgendamentoApi = {
+  idagenda: number
+  datahora: string
+  doutor_iddoutor: number
+  servico_idservico: number | null
+  doutor_nome: string | null
+  servico_nome: string | null
+}
+  
 type ConsultaHistorico = {
   id: number
   data: Date
@@ -59,7 +68,7 @@ export function PatientHistoryModal({
   useEffect(() => {
     let active = true
 
-    async function carregarHistorico() {
+    /* async function carregarHistorico() {
       try {
         const [agendaResponse, doutoresResponse, servicosResponse] = await Promise.all([
           fetchWithToken(`${API_URL}/agenda`),
@@ -101,6 +110,41 @@ export function PatientHistoryModal({
               : nomesServicos.get(agendamento.servico_idservico)
                 ?? `Serviço #${agendamento.servico_idservico}`,
           }))
+
+        if (historico.some((consulta) => Number.isNaN(consulta.data.getTime()))) {
+          throw new Error('A API retornou uma data inválida para um agendamento.')
+        }
+
+        if (active) setConsultas(historico)
+      } catch (loadError) {
+        if (active) {
+          setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar o histórico.')
+        }
+      } finally {
+        if (active) setLoading(false)
+      }
+    } */
+
+    async function carregarHistorico() {
+      try {
+        const response = await fetchWithToken(`${API_URL}/agenda/paciente/${patient.id}`)
+        const data = await readResponse(response) as {
+          agendamentos?: AgendamentoApi[]
+          message?: string
+        }
+        if (!response.ok) throw new Error(messageFrom(data))
+        if (!Array.isArray(data.agendamentos)) {
+          throw new Error('A API retornou uma lista de agendamentos inválida.')
+        }
+
+        const historico = data.agendamentos.map((agendamento) => ({
+          id: agendamento.idagenda,
+          data: new Date(agendamento.datahora),
+          profissional: agendamento.doutor_nome ?? `Profissional #${agendamento.doutor_iddoutor}`,
+          servico: agendamento.servico_idservico == null
+            ? 'Serviço não informado'
+            : agendamento.servico_nome ?? `Serviço #${agendamento.servico_idservico}`,
+        }))
 
         if (historico.some((consulta) => Number.isNaN(consulta.data.getTime()))) {
           throw new Error('A API retornou uma data inválida para um agendamento.')

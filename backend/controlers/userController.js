@@ -7,7 +7,7 @@ const createUserToken = require('../helpers/create-user-token')
 const bcrypt = require('bcrypt')
 
 module.exports = class UserController{
-    static async register(req, res){
+    /* static async register(req, res){
         const {usuario, email, senha, tipo, clinica_cnpj} = req.body
 
         //criptografar senha
@@ -27,7 +27,7 @@ module.exports = class UserController{
         }catch(error){
             res.status(500).json({message: error})
         }
-    }
+    } */
 
     static async registerForClinic(req, res){
         const {usuario, email, senha, tipo} = req.body

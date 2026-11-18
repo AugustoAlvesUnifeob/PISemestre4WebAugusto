@@ -93,7 +93,8 @@ module.exports = class PacienteController{
             }, { transaction })
             await atualizarTagsPaciente(paciente.idpacientes, resultadoTags.ids, transaction)
             await transaction.commit()
-            res.status(200).json({message:'Paciente Cadastrado com sucesso'})
+            //res.status(200).json({message:'Paciente Cadastrado com sucesso'})
+            res.status(200).json({message:'Paciente Cadastrado com sucesso', paciente})
         }catch(error){
             await transaction.rollback()
             res.status(500).json({message: error.message})

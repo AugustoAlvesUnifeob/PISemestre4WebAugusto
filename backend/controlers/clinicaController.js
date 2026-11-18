@@ -1,8 +1,13 @@
 //requerer o model do usuario
 const Clinica = require('../models/Clinica')
+const User = require('../models/Users')
+
+//requerer a conexão (usada para a transação) e a biblioteca bcrypt
+const conn = require('../db/conn')
+const bcrypt = require('bcrypt')
 
 module.exports = class ClinicaController{
-    static async register(req, res){
+    /* static async register(req, res){
         const {cnpj, nome} = req.body
 
         //criar novo usuario
@@ -14,6 +19,35 @@ module.exports = class ClinicaController{
             res.status(200).json({message:'Clinica Cadastrada com sucesso'})
         }catch(error){
             res.status(500).json({message: error})
+        }
+    } */
+
+    //Cadastra a clínica e o usuário master (administrador) juntos: se um falhar, nenhum é salvo.
+    static async registerCompleto(req, res){
+        const {cnpj, nome, usuario, email, senha} = req.body
+
+        try{
+            const salt = await bcrypt.genSalt(12)
+            const passwordHash = await bcrypt.hash(senha, salt)
+
+            //criar novo usuario
+            await conn.transaction(async (transaction) => {
+                await Clinica.create({cnpj, nome}, {transaction})
+                await User.create({
+                    usuario,
+                    email,
+                    senha: passwordHash,
+                    tipo: 1,
+                    clinica_cnpj: cnpj
+                }, {transaction})
+            })
+
+            return res.status(201).json({message:'Clínica e usuário master cadastrados com sucesso'})
+        }catch(error){
+            if(error.name === 'SequelizeUniqueConstraintError'){
+                return res.status(409).json({message:'Já existe uma clínica cadastrada com este CNPJ'})
+            }
+            return res.status(500).json({message: error.message})
         }
     }
 

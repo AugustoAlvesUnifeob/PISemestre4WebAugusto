@@ -38,6 +38,49 @@ async function validarDadosConsulta(dados, clinicaCnpj) {
     }
 }
 
+//junta os dados, dentro do token
+async function enriquecerAgendamentos(agendamentos, clinica_cnpj) {
+    if (!agendamentos.length) return []
+
+    const idsUnicos = (campo) => [...new Set(agendamentos.map(a => a[campo]).filter(id => id != null))]
+
+    const [pacientes, doutores, servicos] = await Promise.all([
+        Paciente.findAll({
+            where: { clinica_cnpj, idpacientes: idsUnicos('pacientes_idpacientes') },
+            attributes: ['idpacientes', 'nome', 'telefone', 'email']
+        }),
+        Doutor.findAll({
+            where: { clinica_cnpj, iddoutor: idsUnicos('doutor_iddoutor') },
+            attributes: ['iddoutor', 'nome']
+        }),
+        Servicos.findAll({
+            where: { clinica_cnpj, idservico: idsUnicos('servico_idservico') },
+            attributes: ['idservico', 'nome', 'preco']
+        })
+    ])
+
+    const pacientesPorId = new Map(pacientes.map(p => [p.idpacientes, p]))
+    const doutoresPorId = new Map(doutores.map(d => [d.iddoutor, d]))
+    const servicosPorId = new Map(servicos.map(s => [s.idservico, s]))
+
+    return agendamentos.map(agendamento => {
+        const dados = agendamento.toJSON()
+        const paciente = pacientesPorId.get(dados.pacientes_idpacientes)
+        const doutor = doutoresPorId.get(dados.doutor_iddoutor)
+        const servico = servicosPorId.get(dados.servico_idservico)
+
+        return {
+            ...dados,
+            paciente_nome: paciente?.nome ?? null,
+            paciente_telefone: paciente?.telefone ?? null,
+            paciente_email: paciente?.email ?? null,
+            doutor_nome: doutor?.nome ?? null,
+            servico_nome: servico?.nome ?? null,
+            servico_preco: servico ? Number(servico.preco) : null
+        }
+    })
+}
+
 module.exports = class AgendaController {
     static async movimentoPorPlano(req, res) {
         const clinicaCnpj = req.user.clinica_cnpj
@@ -104,12 +147,53 @@ module.exports = class AgendaController {
         }
     }
 
-    static async listAll(req, res) {
+    /* static async listAll(req, res) {
         try {
             const agendamentos = await Agenda.findAll({
                 where: { clinica_cnpj: req.user.clinica_cnpj }
             })
             return res.status(200).json({ agendamentos })
+        } catch (error) {
+            return res.status(500).json({ message: error.message })
+        }
+    } */
+
+    static async listAll(req, res) {
+        const clinica_cnpj = req.user.clinica_cnpj
+
+        try {
+            const agendamentos = await Agenda.findAll({ where: { clinica_cnpj } })
+            return res.status(200).json({
+                agendamentos: await enriquecerAgendamentos(agendamentos, clinica_cnpj)
+            })
+        } catch (error) {
+            return res.status(500).json({ message: error.message })
+        }
+    }
+
+    static async historicoPaciente(req, res) {
+        const clinica_cnpj = req.user.clinica_cnpj
+        const idpaciente = Number(req.params.idpaciente)
+
+        if (!Number.isInteger(idpaciente) || idpaciente <= 0) {
+            return res.status(400).json({ message: 'Paciente inválido.' })
+        }
+
+        try {
+            const paciente = await Paciente.findOne({
+                where: { idpacientes: idpaciente, clinica_cnpj }
+            })
+            if (!paciente) {
+                return res.status(404).json({ message: 'Paciente não encontrado.' })
+            }
+
+            const agendamentos = await Agenda.findAll({
+                where: { pacientes_idpacientes: idpaciente, clinica_cnpj },
+                order: [['datahora', 'DESC']]
+            })
+            return res.status(200).json({
+                agendamentos: await enriquecerAgendamentos(agendamentos, clinica_cnpj)
+            })
         } catch (error) {
             return res.status(500).json({ message: error.message })
         }
