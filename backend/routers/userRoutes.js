@@ -5,7 +5,7 @@ const route = require('express').Router()
 const UserController = require('../controlers/userController')
 
 //requerer as validacoes
-const {adminRegisterValidationRules, validate} = require('../helpers/userValidator')
+const {adminRegisterValidationRules,editUserValidationRules,adminEditUserValidationRules,validate} = require('../helpers/userValidator')
 // const {registerValidationRules, adminRegisterValidationRules, validate} = require('../helpers/userValidator')
 
 //requerer a validação do token
@@ -28,14 +28,18 @@ route.post(
 //login
 route.post('/login', UserController.login);
 
-route.post('/update/:idusuario', verifyToken, UserController.update);
+//editar o próprio perfil
+route.post('/update/:idusuario', verifyToken, editUserValidationRules(), validate, UserController.update);
 
-route.post('/delete/:idusuario', verifyToken, UserController.delete);
+//administrador editar outro usuário
+route.post('/admin/update/:idusuario', verifyToken, verifyAdmin, adminEditUserValidationRules(), validate, UserController.adminUpdate);
+
+route.post('/delete/:idusuario', verifyToken, verifyAdmin, UserController.delete);
 
 //listar todos
-route.get('/', verifyToken, UserController.listAll)
+route.get('/', verifyToken, verifyAdmin, UserController.listAll)
 
-route.get('/listarByCNPJ', verifyToken, UserController.listarByCNPJ)
+route.get('/listarByCNPJ', verifyToken, verifyAdmin, UserController.listarByCNPJ)
 
 route.get('/:idusuario', verifyToken, UserController.listarOne)
 
