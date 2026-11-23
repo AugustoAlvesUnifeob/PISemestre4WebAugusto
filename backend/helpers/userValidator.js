@@ -22,6 +22,19 @@ const masterRegisterValidationRules = () => [
     body('email').isEmail().withMessage('Informe um e-mail válido'),
 ]
 
+//validações para editar a própria conta
+const editUserValidationRules = () => [
+    body('usuario').trim().notEmpty().withMessage('O nome é obrigatório'),
+    body('email').trim().isEmail().withMessage('Informe um e-mail válido'),
+    body('senha').optional({ values: 'falsy' }).isLength({ min: 8 }).withMessage('A senha deve ter pelo menos 8 caracteres')
+]
+
+//validações para o administrador editar outros usuários
+const adminEditUserValidationRules = () => [
+    ...editUserValidationRules(),
+    body('tipo').isInt({ min: 0, max: 1 }).withMessage('Tipo de usuário inválido')
+]
+
 //validação
 const validate = (req, res, next) => {
     const erros = validationResult(req)
@@ -36,5 +49,7 @@ module.exports = {
     registerValidationRules,
     adminRegisterValidationRules,
     masterRegisterValidationRules,
+    editUserValidationRules,
+    adminEditUserValidationRules,
     validate
 }

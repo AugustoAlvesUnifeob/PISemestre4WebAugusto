@@ -17,6 +17,7 @@ export function EntityForm({
   notice,
   initialValues,
   submitLabel = 'Cadastrar',
+  successMessage = 'Cadastro realizado com sucesso!',
   embedded = false,
   onSaved,
   onCancel,
@@ -33,6 +34,7 @@ export function EntityForm({
   notice: string
   initialValues?: Record<string, string | number | boolean | number[] | undefined>
   submitLabel?: string
+  successMessage?: string
   embedded?: boolean
   //onSaved?: (values: Record<string, string>) => void
   onSaved?: (values: Record<string, string>, created?: Record<string, unknown>) => void
@@ -95,7 +97,7 @@ export function EntityForm({
         const response = await post(endpoint, payload)
         if (!response.ok) throw new Error(messageFrom(response.data))
         created = response.data
-        onNotice('Cadastro realizado com sucesso!')
+        onNotice(successMessage)
       }
 
       if (onSaved) {
